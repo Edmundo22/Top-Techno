@@ -24,7 +24,12 @@ export class AuthController {
     if (!req.user) {
       throw new AppError(ErrorMessages.auth.notAuthenticated, 401);
     }
-    const user = await this.meService.execute(req.user.sub);
+    const { user, token } = await this.meService.execute(req.user.sub);
+
+    // Sliding window: cada /auth/me renova o cookie, então enquanto o usuário
+    // mantiver a aba aberta ou recarregar dentro da janela, o login persiste.
+    res.cookie(authConfig.cookie.name, token, authConfig.cookie.options);
+
     return ok(res, { user });
   };
 

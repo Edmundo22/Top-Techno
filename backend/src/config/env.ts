@@ -20,7 +20,7 @@ const envSchema = z.object({
     .transform((v) => v.toLowerCase() === 'true'),
 
   JWT_SECRET: z.string().min(32, 'JWT_SECRET deve ter ao menos 32 caracteres'),
-  JWT_EXPIRES_IN: z.string().default('8h'),
+  JWT_EXPIRES_IN: z.string().default('30d'),
 
   COOKIE_NAME: z.string().default('tt_session'),
   COOKIE_SECURE: z
@@ -29,6 +29,7 @@ const envSchema = z.object({
     .transform((v) => v.toLowerCase() === 'true'),
   COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_MAX_AGE_DAYS: z.coerce.number().int().positive().default(30),
 
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 });
