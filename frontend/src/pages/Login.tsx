@@ -44,17 +44,17 @@ export function LoginPage() {
 
         <div className="max-w-md">
           <h2 className="text-3xl font-semibold leading-tight">
-            Plataforma de operação <span className="text-brand-accent">inteligente</span>.
+            Gestão de entregas <span className="text-brand-accent">em tempo real</span>.
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-white/70">
-            Monitore, controle e otimize os processos da sua empresa em um só lugar.
+            Desenhe rotas, acompanhe a frota no mapa e veja o que já foi entregue — tudo num só painel.
           </p>
         </div>
 
         <div className="flex items-center gap-4 text-xs text-white/50">
-          <span>© TOP TECHNO</span>
+          <span>© TOP TECHNO Logística</span>
           <span>·</span>
-          <span>Ambiente seguro · Dados criptografados em trânsito</span>
+          <span>Acesso restrito à operação</span>
         </div>
       </div>
 
@@ -65,11 +65,11 @@ export function LoginPage() {
         >
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-accent-soft px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-brand-ink">
-              Entrar
+              Central de operações
             </span>
-            <h1 className="text-xl font-semibold text-brand-ink">Acesse sua conta</h1>
+            <h1 className="text-xl font-semibold text-brand-ink">Entrar no painel logístico</h1>
             <p className="text-sm text-brand-ink-muted">
-              Use seu usuário e senha cadastrados.
+              Use seu usuário e senha para acompanhar rotas e entregas da frota.
             </p>
           </div>
 

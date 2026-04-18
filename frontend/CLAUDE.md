@@ -10,8 +10,8 @@ SPA React + Vite + SWC + Tailwind + TypeScript.
 | % | Cor      | Token Tailwind          | Uso                                  |
 |---|----------|-------------------------|--------------------------------------|
 | 60| `#ffffff`| `brand-surface`         | fundos, cards                        |
-| 30| `#465253`| `brand-ink`             | sidebar, topbar, tipografia forte    |
-| 10| `#4ec3f1`| `brand-accent`          | CTA primário, item ativo, destaque   |
+| 30| `#1F2937`| `brand-ink`             | sidebar, topbar, tipografia forte    |
+| 10| `#b4e7ff`| `brand-accent`          | CTA primário, item ativo, destaque   |
 
 Derivados: `brand-ink-soft`, `brand-ink-muted`, `brand-line`, `brand-line-soft`, `brand-accent-hover`, `brand-accent-soft`.
 
