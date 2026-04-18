@@ -1,14 +1,13 @@
 import crypto from 'node:crypto';
-import jwt, { type SignOptions } from 'jsonwebtoken';
-import { authConfig } from '../../../config/auth';
 import { AppError } from '../../../shared/errors/AppError';
 import { ErrorMessages } from '../../../shared/errors/errorMessages';
 import type { LoginDTO } from '../schemas/login.schema';
 import { UsuarioAuthRepository } from '../repositories/UsuarioAuthRepository';
+import { signSessionToken, type TokenUser } from './tokenService';
 
 export interface LoginResult {
   token: string;
-  user: { id: number; usuario: string; email: string };
+  user: TokenUser;
 }
 
 function timingSafeEqualString(a: string, b: string): boolean {
@@ -39,25 +38,15 @@ export class LoginService {
       throw new AppError(ErrorMessages.auth.invalidCredentials, 401);
     }
 
-    const signOptions: SignOptions = {
-      algorithm: 'HS256',
-      expiresIn: authConfig.jwt.expiresIn as SignOptions['expiresIn'],
-      subject: String(usuarioRow.ID_USUARIO),
+    const user: TokenUser = {
+      id: usuarioRow.ID_USUARIO,
+      usuario: usuarioRow.USUARIO,
+      email: usuarioRow.EMAIL,
     };
 
-    const token = jwt.sign(
-      { usuario: usuarioRow.USUARIO, email: usuarioRow.EMAIL },
-      authConfig.jwt.secret,
-      signOptions,
-    );
-
     return {
-      token,
-      user: {
-        id: usuarioRow.ID_USUARIO,
-        usuario: usuarioRow.USUARIO,
-        email: usuarioRow.EMAIL,
-      },
+      token: signSessionToken(user),
+      user,
     };
   }
 }

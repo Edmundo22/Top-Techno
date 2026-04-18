@@ -32,7 +32,11 @@ Responsável por **tudo** que envolve autenticação do usuário: login, leitura
 - **JWT em cookie HttpOnly** (`tt_session`): não é acessível via JS no browser → mitiga XSS roubando token. `Secure=true` em produção, `SameSite=strict` em produção, `lax` em dev.
 - **Resposta genérica** em falha de login: "Credenciais inválidas" — não distingue usuário inexistente de senha errada.
 - **Rate limit**: 5 tentativas / 15min / IP em `/auth/login`. Mitiga brute force.
-- **Sessão persistida**: frontend chama `GET /auth/me` no mount; enquanto o cookie for válido, a sessão se mantém no F5.
+- **Sessão persistida + sliding window**:
+  - cookie tem `maxAge` (padrão 30 dias — `COOKIE_MAX_AGE_DAYS`), então sobrevive ao fechar/abrir o browser;
+  - JWT tem `expiresIn=30d` (padrão — `JWT_EXPIRES_IN`);
+  - cada chamada a `GET /auth/me` **reemite** o JWT e renova o cookie, então enquanto o usuário voltar ao sistema dentro da janela, o login **não expira**;
+  - o frontend chama `/auth/me` no mount do app, portanto um F5 renova a sessão automaticamente.
 - **Logout**: `res.clearCookie` com os mesmos atributos (`path`, `domain`, `sameSite`) do cookie original — senão o browser ignora o clear.
 
 ## Como estender
