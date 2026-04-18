@@ -31,7 +31,7 @@ Responsável por **tudo** que envolve autenticação do usuário: login, leitura
   - comparação com `timingSafeEqual` em vez de `===` (independente de ser hash ou não, evita revelar tamanho/bytes por tempo).
 - **JWT em cookie HttpOnly** (`tt_session`): não é acessível via JS no browser → mitiga XSS roubando token. `Secure=true` em produção, `SameSite=strict` em produção, `lax` em dev.
 - **Resposta genérica** em falha de login: "Credenciais inválidas" — não distingue usuário inexistente de senha errada.
-- **Rate limit**: 5 tentativas / 15min / IP em `/auth/login`. Mitiga brute force.
+- **Rate limit**: 10 tentativas / 5min / IP em `/auth/login`. Mitiga brute force.
 - **Sessão persistida + sliding window**:
   - cookie tem `maxAge` (padrão 30 dias — `COOKIE_MAX_AGE_DAYS`), então sobrevive ao fechar/abrir o browser;
   - JWT tem `expiresIn=30d` (padrão — `JWT_EXPIRES_IN`);
