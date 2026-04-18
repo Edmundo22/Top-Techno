@@ -10,7 +10,7 @@ const base =
 
 const styles: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:
-    'bg-brand-accent text-white hover:bg-brand-accent-hover focus-visible:outline-brand-accent',
+    'bg-brand-accent text-brand-ink hover:bg-brand-accent-hover focus-visible:outline-brand-accent',
   ghost:
     'bg-transparent text-brand-ink hover:bg-brand-line-soft',
 };
