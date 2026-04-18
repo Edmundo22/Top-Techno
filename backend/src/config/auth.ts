@@ -1,0 +1,19 @@
+import type { CookieOptions } from 'express';
+import { env } from './env';
+
+export const authConfig = {
+  jwt: {
+    secret: env.JWT_SECRET,
+    expiresIn: env.JWT_EXPIRES_IN,
+  },
+  cookie: {
+    name: env.COOKIE_NAME,
+    options: {
+      httpOnly: true,
+      secure: env.COOKIE_SECURE,
+      sameSite: env.COOKIE_SAMESITE,
+      domain: env.COOKIE_DOMAIN || undefined,
+      path: '/',
+    } satisfies CookieOptions,
+  },
+};

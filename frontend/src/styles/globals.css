@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Paleta 60-30-10 */
+  --color-surface: #ffffff;     /* 60% fundos, cards */
+  --color-ink: #465253;         /* 30% sidebar/topbar/texto forte */
+  --color-ink-soft: #5a676a;
+  --color-ink-muted: #8a9497;
+  --color-line: #e3e7e8;
+  --color-line-soft: #f1f3f4;
+  --color-accent: #4ec3f1;      /* 10% CTA, ativo, destaque */
+  --color-accent-hover: #3cb5e6;
+  --color-accent-soft: #e7f6fd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
