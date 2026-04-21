@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { HistoricoPage } from '../pages/Historico';
 import { LoginPage } from '../pages/Login';
 import { MonitoramentoPage } from '../pages/Monitoramento';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -12,6 +13,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <MonitoramentoPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/historico"
+        element={
+          <ProtectedRoute>
+            <HistoricoPage />
           </ProtectedRoute>
         }
       />

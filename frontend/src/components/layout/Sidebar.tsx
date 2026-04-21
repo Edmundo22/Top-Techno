@@ -30,6 +30,35 @@ const items: NavItem[] = [
       </svg>
     ),
   },
+  {
+    to: '/historico',
+    label: 'Histórico',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+        <path
+          d="M12 8v5l3 2"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M3.5 12a8.5 8.5 0 1 0 2.5-6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M3 4v4h4"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
 ];
 
 export function Sidebar() {
