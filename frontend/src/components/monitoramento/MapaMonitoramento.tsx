@@ -7,7 +7,7 @@ import { RotaLayer } from './RotaLayer';
 import { VeiculoMarker } from './VeiculoMarker';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
-const DEFAULT_ZOOM = 14;
+const DEFAULT_ZOOM = 16;
 
 const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
@@ -24,6 +24,7 @@ interface MapaMonitoramentoProps {
   showLocais: boolean;
   selectedViagemId: number | null;
   onSelectViagem: (idViagem: number | null) => void;
+  resetKey: number;
 }
 
 export function MapaMonitoramento({
@@ -34,6 +35,7 @@ export function MapaMonitoramento({
   showLocais,
   selectedViagemId,
   onSelectViagem,
+  resetKey,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -103,6 +105,7 @@ export function MapaMonitoramento({
   return (
     <div className="h-full w-full overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <GoogleMap
+        key={resetKey}
         mapContainerStyle={containerStyle}
         center={SAO_PAULO_CENTER}
         zoom={DEFAULT_ZOOM}
