@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ClockCard } from '../components/monitoramento/ClockCard';
 import { LastUpdateBadge } from '../components/monitoramento/LastUpdateBadge';
@@ -14,13 +14,15 @@ import {
 } from '../services/monitoramentoApi';
 import { logData, logSuccess } from '../utils/logger';
 
+const countLocaisUnicos = (locais: { idLocal: number }[]) =>
+  new Set(locais.map((l) => l.idLocal)).size;
+
 const POLL_INTERVAL_MS = 15_000;
 
 export function MonitoramentoPage() {
   const [showRotas, setShowRotas] = useState(false);
   const [showLocais, setShowLocais] = useState(false);
   const [selectedViagemId, setSelectedViagemId] = useState<number | null>(null);
-  const [mapResetKey, setMapResetKey] = useState(0);
 
   const veiculosPoll = useLivePoll<VeiculosResponse>(monitoramentoEndpoints.veiculos, {
     intervalMs: POLL_INTERVAL_MS,
@@ -42,20 +44,12 @@ export function MonitoramentoPage() {
     logData('monitoramento veiculos', veiculos);
   }, [veiculos]);
 
-  const resetMap = () => {
-    setMapResetKey((k) => k + 1);
-    veiculosPoll.refetch();
-    if (showLocais) locaisPoll.refetch();
-    logSuccess('mapa reiniciado', { showLocais });
-  };
-
   const handleToggleRotas = () => {
     setShowRotas((v) => {
       const next = !v;
       logSuccess('toggle rotas', { on: next });
       if (!next) {
         setSelectedViagemId(null);
-        resetMap();
       }
       return next;
     });
@@ -69,9 +63,9 @@ export function MonitoramentoPage() {
     });
   };
 
-  const handleSelectViagem = (idViagem: number | null) => {
+  const handleSelectViagem = useCallback((idViagem: number | null) => {
     setSelectedViagemId((current) => (current === idViagem ? null : idViagem));
-  };
+  }, []);
 
   const refreshAll = () => {
     veiculosPoll.refetch();
@@ -109,7 +103,7 @@ export function MonitoramentoPage() {
             active={showLocais}
             onClick={handleToggleLocais}
             label="Locais do dia"
-            count={showLocais ? locais.length : undefined}
+            count={showLocais ? countLocaisUnicos(locais) : undefined}
           />
         </section>
 
@@ -122,7 +116,6 @@ export function MonitoramentoPage() {
             showLocais={showLocais}
             selectedViagemId={selectedViagemId}
             onSelectViagem={handleSelectViagem}
-            resetKey={mapResetKey}
           />
         </section>
 

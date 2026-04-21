@@ -1,13 +1,14 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import type { LocalDia, Rota, Veiculo } from '../../services/monitoramentoApi';
+import { formatBRDateTime } from '../../utils/datetime';
 import { logError, logSuccess } from '../../utils/logger';
 import { LocalMarker } from './LocalMarker';
-import { RotaLayer } from './RotaLayer';
 import { VeiculoMarker } from './VeiculoMarker';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
+const ROUTE_COLOR = '#1d4ed8';
 
 const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
@@ -24,7 +25,6 @@ interface MapaMonitoramentoProps {
   showLocais: boolean;
   selectedViagemId: number | null;
   onSelectViagem: (idViagem: number | null) => void;
-  resetKey: number;
 }
 
 export function MapaMonitoramento({
@@ -35,7 +35,6 @@ export function MapaMonitoramento({
   showLocais,
   selectedViagemId,
   onSelectViagem,
-  resetKey,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -45,7 +44,20 @@ export function MapaMonitoramento({
     libraries: MAP_LIBRARIES,
   });
 
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  const rotaPolylinesRef = useRef<google.maps.Polyline[]>([]);
+  const rotaMarkersRef = useRef<google.maps.Marker[]>([]);
+  const rotaInfoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
+
+  const clearRotas = useCallback(() => {
+    rotaInfoWindowsRef.current.forEach((iw) => iw.close());
+    rotaMarkersRef.current.forEach((m) => m.setMap(null));
+    rotaPolylinesRef.current.forEach((p) => p.setMap(null));
+    rotaInfoWindowsRef.current = [];
+    rotaMarkersRef.current = [];
+    rotaPolylinesRef.current = [];
+  }, []);
 
   const mapOptions: google.maps.MapOptions = {
     streetViewControl: false,
@@ -68,14 +80,108 @@ export function MapaMonitoramento({
       : undefined,
   };
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
+  const onLoad = useCallback((m: google.maps.Map) => {
+    setMap(m);
     logSuccess('GoogleMap carregado', { center: SAO_PAULO_CENTER, zoom: DEFAULT_ZOOM });
   }, []);
 
   const onUnmount = useCallback(() => {
-    mapRef.current = null;
+    setMap(null);
   }, []);
+
+  useEffect(() => {
+    if (!map) return;
+
+    clearRotas();
+
+    if (!showRotas) return;
+
+    rotas.forEach((rota) => {
+      let path: google.maps.LatLng[];
+      try {
+        path = google.maps.geometry.encoding.decodePath(rota.polyline);
+      } catch (err) {
+        logError('decodePath rota', err, { idViagem: rota.idViagem });
+        return;
+      }
+      if (path.length === 0) return;
+
+      const isSelected = selectedViagemId === rota.idViagem;
+
+      const polyline = new google.maps.Polyline({
+        path,
+        geodesic: false,
+        strokeColor: ROUTE_COLOR,
+        strokeOpacity: isSelected ? 1 : 0.85,
+        strokeWeight: isSelected ? 6 : 4,
+        clickable: true,
+        zIndex: isSelected ? 8 : 5,
+        map,
+      });
+      polyline.addListener('click', () => onSelectViagem(rota.idViagem));
+      rotaPolylinesRef.current.push(polyline);
+
+      const endpointIcon: google.maps.Symbol = {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: ROUTE_COLOR,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+        scale: 7,
+      };
+
+      const makeEndpoint = (
+        letter: 'I' | 'F',
+        position: google.maps.LatLng,
+        dateIso: string | null,
+      ) => {
+        const marker = new google.maps.Marker({
+          position,
+          map,
+          icon: endpointIcon,
+          label: {
+            text: letter,
+            color: '#ffffff',
+            fontSize: '10px',
+            fontWeight: 'bold',
+          },
+          zIndex: 15,
+        });
+
+        const placa = rota.placa ?? 'Sem placa';
+        const label = letter === 'I' ? 'Início' : 'Fim';
+        const content = `
+          <div style="min-width:180px;font-size:12px;color:#1F2937">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">${placa}</div>
+            <div><span style="color:#6B7280">${label}: </span>${formatBRDateTime(dateIso)}</div>
+          </div>
+        `;
+
+        const infoWindow = new google.maps.InfoWindow({
+          content,
+          pixelOffset: new google.maps.Size(0, -10),
+        });
+
+        marker.addListener('click', () => {
+          rotaInfoWindowsRef.current.forEach((iw) => iw.close());
+          infoWindow.open({ map, anchor: marker });
+          onSelectViagem(rota.idViagem);
+        });
+
+        rotaMarkersRef.current.push(marker);
+        rotaInfoWindowsRef.current.push(infoWindow);
+      };
+
+      makeEndpoint('I', path[0], rota.dtIniViagem);
+      makeEndpoint('F', path[path.length - 1], rota.dtFimViagem);
+    });
+
+    logSuccess('rotas renderizadas', { total: rotas.length, selected: selectedViagemId });
+
+    return () => {
+      clearRotas();
+    };
+  }, [map, showRotas, rotas, selectedViagemId, onSelectViagem, clearRotas]);
 
   if (!apiKey) {
     return (
@@ -105,7 +211,6 @@ export function MapaMonitoramento({
   return (
     <div className="h-full w-full overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <GoogleMap
-        key={resetKey}
         mapContainerStyle={containerStyle}
         center={SAO_PAULO_CENTER}
         zoom={DEFAULT_ZOOM}
@@ -113,16 +218,6 @@ export function MapaMonitoramento({
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
-        {showRotas &&
-          rotas.map((r) => (
-            <RotaLayer
-              key={`rota-${r.idViagem}`}
-              data={r}
-              selected={selectedViagemId === r.idViagem}
-              onSelect={() => onSelectViagem(r.idViagem)}
-            />
-          ))}
-
         {showLocais &&
           locais.map((l) => (
             <LocalMarker key={`local-${l.idViagemEntrada}`} data={l} />
