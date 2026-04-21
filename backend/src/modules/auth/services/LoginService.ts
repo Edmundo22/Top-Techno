@@ -25,7 +25,7 @@ export class LoginService {
   constructor(private readonly repository = new UsuarioAuthRepository()) {}
 
   async execute(dto: LoginDTO): Promise<LoginResult> {
-    const usuarioRow = await this.repository.findByUsuario(dto.usuario);
+    const usuarioRow = await this.repository.findByEmail(dto.email);
 
     if (!usuarioRow) {
       const dummy = 'x'.repeat(Math.max(1, dto.senha.length));

@@ -12,7 +12,7 @@ import { authApi, type AuthUser } from '../services/authApi';
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (usuario: string, senha: string) => Promise<void>;
+  login: (email: string, senha: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -40,8 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (usuario: string, senha: string) => {
-    const u = await authApi.login(usuario, senha);
+  const login = useCallback(async (email: string, senha: string) => {
+    const u = await authApi.login(email, senha);
     setUser(u);
   }, []);
 

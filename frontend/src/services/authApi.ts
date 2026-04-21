@@ -15,8 +15,8 @@ interface MeResponse {
 }
 
 export const authApi = {
-  async login(usuario: string, senha: string): Promise<AuthUser> {
-    const res = await api.post<LoginResponse>('/auth/login', { usuario, senha });
+  async login(email: string, senha: string): Promise<AuthUser> {
+    const res = await api.post<LoginResponse>('/auth/login', { email, senha });
     return res.data.data.user;
   },
   async me(): Promise<AuthUser> {

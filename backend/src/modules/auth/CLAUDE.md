@@ -16,7 +16,7 @@ Responsável por **tudo** que envolve autenticação do usuário: login, leitura
 2. **`schemas/login.schema.ts`** — `zod` valida body da requisição. Normaliza com `trim()`.
 3. **`controllers/AuthController.ts`** — fino: pega body já validado, chama service, grava cookie, devolve JSON.
 4. **`services/LoginService.ts`** — regra de negócio:
-   - busca o usuário pelo campo `USUARIO`;
+   - busca o usuário pelo campo `EMAIL` (case-insensitive: schema faz `toLowerCase()` e SQL compara com `LOWER(EMAIL)`);
    - compara senha com `crypto.timingSafeEqual` (evita timing attack);
    - se usuário não existe, ainda roda uma comparação dummy para manter tempo constante (evita enumeração);
    - assina JWT `{ sub, usuario, email }` com `HS256`, `expiresIn = 8h`, segredo `JWT_SECRET`.

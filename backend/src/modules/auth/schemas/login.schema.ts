@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  usuario: z
+  email: z
     .string()
     .trim()
-    .min(1, 'Usuário é obrigatório')
-    .max(100, 'Usuário excede o tamanho máximo'),
+    .toLowerCase()
+    .email('Email inválido')
+    .max(200, 'Email excede o tamanho máximo'),
   senha: z
     .string()
     .min(1, 'Senha é obrigatória')
