@@ -15,12 +15,20 @@ Monitoramento.tsx (page)
   │    ├─ ClockCard         ← pill compacta, useTick(1000) → relógio PT-BR
   │    ├─ LastUpdateBadge   ← pill compacta, lastUpdate + useTick → "Atualizado há Ns"
   │    └─ ToggleChip × 3    ← [Veículos (sempre on)] [Rotas] [Locais]
-  ├─ MapaMonitoramento      ← GoogleMap com veiculos + (rotas) + (locais)
-  │    ├─ VeiculoMarker     ← Marker + OverlayView label + InfoWindow
-  │    ├─ RotaLayer         ← Polyline azul + Markers I/F circulares com InfoWindow
+  ├─ MapaMonitoramento      ← GoogleMap com veiculos + (rotas imperativas) + (locais)
+  │    ├─ VeiculoMarker     ← Marker + OverlayView label + InfoWindow (declarativo)
+  │    ├─ [rotas]           ← Polyline + 2 Markers I/F circulares + InfoWindows criados via
+  │    │                      `new google.maps.Polyline/Marker/InfoWindow` em useEffect,
+  │    │                      guardados em useRef[] e limpos com setMap(null) no cleanup
   │    └─ LocalMarker       ← Marker (pin padrão) + InfoWindow + Circle condicional (raio)
   └─ RotasTable             ← só quando toggle Rotas ativo; destaca a linha selecionada
 ```
+
+## Rotas: padrão imperativo
+
+As rotas (polyline + I/F) **não usam** os wrappers declarativos de `@react-google-maps/api`. Em vez disso, um `useEffect` em [MapaMonitoramento.tsx](MapaMonitoramento.tsx) cria instâncias nativas via `new google.maps.Polyline(...)` / `new google.maps.Marker(...)` / `new google.maps.InfoWindow(...)` e as acumula em três `useRef<T[]>([])`. O cleanup chama `setMap(null)` em cada item e zera os arrays.
+
+**Por que imperativo:** o wrapper declarativo deixava polylines órfãs no mapa quando o toggle de rotas desligava. O padrão imperativo dá controle determinístico do ciclo de vida, igual à referência em [../../../../../Mapa.js](../../../../../Mapa.js) (componente de produção do usuário). Dispara quando `[map, showRotas, rotas, selectedViagemId, onSelectViagem]` mudam — por isso `onSelectViagem` precisa ser `useCallback` na página.
 
 ## Polling e reconciliação
 
