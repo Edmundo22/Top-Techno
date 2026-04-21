@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, extractErrorMessage } from '../services/api';
+import { logData, logError, logSuccess } from '../utils/logger';
 
 interface UseLivePollOptions {
   enabled?: boolean;
@@ -29,11 +30,14 @@ export function useLivePoll<T>(url: string, options: UseLivePollOptions): LivePo
     setLoading(true);
     try {
       const res = await api.get<{ data: T }>(url, { signal: ctrl.signal });
+      logData(`poll ${url}`, res.data.data);
       setData(res.data.data);
       setError(null);
       setLastUpdate(Date.now());
+      logSuccess(`poll ${url}`);
     } catch (err) {
       if (ctrl.signal.aborted) return;
+      logError(`poll ${url}`, err);
       setError(extractErrorMessage(err, 'Falha ao atualizar dados.'));
     } finally {
       if (!ctrl.signal.aborted) setLoading(false);
