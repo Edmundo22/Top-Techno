@@ -19,18 +19,9 @@ export function LocalMarker({ data, color = '#000000' }: LocalMarkerProps) {
 
   if (!position) return null;
 
-  const icon: google.maps.Symbol = {
-    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-    fillColor: color,
-    fillOpacity: 1,
-    strokeColor: color,
-    strokeWeight: 2,
-    scale: 5,
-  };
-
   return (
     <>
-      <Marker position={position} icon={icon} onClick={() => setOpenInfo((v) => !v)} zIndex={10} />
+      <Marker position={position} onClick={() => setOpenInfo((v) => !v)} zIndex={10} />
 
       {showRaio && data.raio != null && data.raio > 0 && (
         <Circle

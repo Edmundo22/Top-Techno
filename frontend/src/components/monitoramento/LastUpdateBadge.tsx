@@ -1,4 +1,3 @@
-import { Card } from '../ui/Card';
 import { useTick } from '../../hooks/useTick';
 import { formatRelative } from '../../utils/datetime';
 
@@ -25,32 +24,29 @@ export function LastUpdateBadge({
       ? Math.max(0, Math.ceil((lastUpdate + intervalMs - nowMs) / 1000))
       : null;
 
+  const dot = loading
+    ? 'animate-pulse bg-brand-accent'
+    : error
+    ? 'bg-red-500'
+    : 'bg-emerald-500';
+
   return (
-    <Card className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium uppercase tracking-wider text-brand-ink-muted">
-        Atualização ao vivo
+    <div className="inline-flex items-center gap-2 rounded-full border border-brand-line bg-white px-3 py-1 text-xs shadow-sm">
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden />
+      <span className="font-medium text-brand-ink">
+        {error ? 'Erro' : `Atualizado ${relative}`}
       </span>
-      <div className="flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${loading ? 'animate-pulse bg-brand-accent' : error ? 'bg-red-500' : 'bg-emerald-500'}`}
-          aria-hidden
-        />
-        <span className="text-sm font-semibold text-brand-ink">
-          {error ? 'Erro ao atualizar' : `Atualizado ${relative}`}
-        </span>
-      </div>
-      <span className="text-xs text-brand-ink-muted">
-        {error
-          ? error
-          : `Intervalo de poll: ${Math.round(intervalMs / 1000)} s · próxima em ${nextInSec ?? '—'} s`}
+      <span className="text-brand-ink-muted">
+        {error ? error : `· próxima em ${nextInSec ?? '—'}s`}
       </span>
       <button
         type="button"
         onClick={onRefresh}
-        className="mt-1 self-start rounded-md border border-brand-line bg-brand-surface px-2 py-1 text-[11px] font-medium text-brand-ink hover:bg-brand-line-soft"
+        className="ml-1 rounded-full border border-brand-line px-2 py-0.5 text-[11px] font-medium text-brand-ink hover:bg-brand-line-soft"
+        title="Atualizar agora"
       >
-        Atualizar agora
+        ↻
       </button>
-    </Card>
+    </div>
   );
 }

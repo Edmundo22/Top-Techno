@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Card } from '../ui/Card';
 import type { Rota } from '../../services/monitoramentoApi';
 import { formatBRDateTime } from '../../utils/datetime';
@@ -6,9 +7,25 @@ interface RotasTableProps {
   rotas: Rota[];
   loading: boolean;
   error: string | null;
+  selectedViagemId: number | null;
+  onSelectViagem: (idViagem: number | null) => void;
 }
 
-export function RotasTable({ rotas, loading, error }: RotasTableProps) {
+export function RotasTable({
+  rotas,
+  loading,
+  error,
+  selectedViagemId,
+  onSelectViagem,
+}: RotasTableProps) {
+  const selectedRowRef = useRef<HTMLTableRowElement | null>(null);
+
+  useEffect(() => {
+    if (selectedViagemId != null && selectedRowRef.current) {
+      selectedRowRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [selectedViagemId]);
+
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b border-brand-line px-5 py-3">
@@ -36,14 +53,26 @@ export function RotasTable({ rotas, loading, error }: RotasTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-line">
-              {rotas.map((r) => (
-                <tr key={r.idViagem} className="text-brand-ink hover:bg-brand-line-soft/50">
-                  <td className="px-5 py-2">{r.statusLabel ?? '—'}</td>
-                  <td className="px-5 py-2 font-semibold">{r.placa ?? '—'}</td>
-                  <td className="px-5 py-2">{formatBRDateTime(r.dtIniViagem)}</td>
-                  <td className="px-5 py-2">{formatBRDateTime(r.dtFimViagem)}</td>
-                </tr>
-              ))}
+              {rotas.map((r) => {
+                const isSelected = r.idViagem === selectedViagemId;
+                return (
+                  <tr
+                    key={r.idViagem}
+                    ref={isSelected ? selectedRowRef : undefined}
+                    onClick={() => onSelectViagem(r.idViagem)}
+                    className={`cursor-pointer text-brand-ink transition-colors ${
+                      isSelected
+                        ? 'bg-brand-accent-soft ring-2 ring-inset ring-brand-accent'
+                        : 'hover:bg-brand-line-soft/50'
+                    }`}
+                  >
+                    <td className="px-5 py-2">{r.statusLabel ?? '—'}</td>
+                    <td className="px-5 py-2 font-semibold">{r.placa ?? '—'}</td>
+                    <td className="px-5 py-2">{formatBRDateTime(r.dtIniViagem)}</td>
+                    <td className="px-5 py-2">{formatBRDateTime(r.dtFimViagem)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

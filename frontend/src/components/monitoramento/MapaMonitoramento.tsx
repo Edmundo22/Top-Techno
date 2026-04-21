@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import type { LocalDia, Rota, Veiculo } from '../../services/monitoramentoApi';
+import { logError, logSuccess } from '../../utils/logger';
 import { LocalMarker } from './LocalMarker';
-import { RotaPolyline } from './RotaPolyline';
+import { RotaLayer } from './RotaLayer';
 import { VeiculoMarker } from './VeiculoMarker';
 
-const DEFAULT_CENTER = { lat: -14.235, lng: -51.9253 };
-const DEFAULT_ZOOM = 5;
+const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
+const DEFAULT_ZOOM = 14;
 
 const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
@@ -15,22 +16,14 @@ const containerStyle = {
   height: '100%',
 };
 
-const mapOptions: google.maps.MapOptions = {
-  disableDefaultUI: false,
-  streetViewControl: false,
-  mapTypeControl: false,
-  fullscreenControl: true,
-  zoomControl: true,
-  clickableIcons: false,
-  gestureHandling: 'greedy',
-};
-
 interface MapaMonitoramentoProps {
   veiculos: Veiculo[];
   rotas: Rota[];
   locais: LocalDia[];
   showRotas: boolean;
   showLocais: boolean;
+  selectedViagemId: number | null;
+  onSelectViagem: (idViagem: number | null) => void;
 }
 
 export function MapaMonitoramento({
@@ -39,6 +32,8 @@ export function MapaMonitoramento({
   locais,
   showRotas,
   showLocais,
+  selectedViagemId,
+  onSelectViagem,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -49,30 +44,36 @@ export function MapaMonitoramento({
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const fittedRef = useRef(false);
+
+  const mapOptions: google.maps.MapOptions = {
+    streetViewControl: false,
+    fullscreenControl: true,
+    zoomControl: true,
+    clickableIcons: false,
+    gestureHandling: 'greedy',
+    mapTypeControl: true,
+    mapTypeControlOptions: isLoaded
+      ? {
+          style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+          position: google.maps.ControlPosition.TOP_LEFT,
+          mapTypeIds: [
+            google.maps.MapTypeId.ROADMAP,
+            google.maps.MapTypeId.SATELLITE,
+            google.maps.MapTypeId.HYBRID,
+            google.maps.MapTypeId.TERRAIN,
+          ],
+        }
+      : undefined,
+  };
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
+    logSuccess('GoogleMap carregado', { center: SAO_PAULO_CENTER, zoom: DEFAULT_ZOOM });
   }, []);
 
   const onUnmount = useCallback(() => {
     mapRef.current = null;
-    fittedRef.current = false;
   }, []);
-
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current || fittedRef.current) return;
-    const points: google.maps.LatLngLiteral[] = veiculos
-      .filter((v): v is Veiculo & { latitude: number; longitude: number } =>
-        v.latitude != null && v.longitude != null,
-      )
-      .map((v) => ({ lat: v.latitude, lng: v.longitude }));
-    if (points.length === 0) return;
-    const bounds = new google.maps.LatLngBounds();
-    points.forEach((p) => bounds.extend(p));
-    mapRef.current.fitBounds(bounds, 80);
-    fittedRef.current = true;
-  }, [isLoaded, veiculos]);
 
   if (!apiKey) {
     return (
@@ -83,6 +84,7 @@ export function MapaMonitoramento({
   }
 
   if (loadError) {
+    logError('Falha ao carregar Google Maps', loadError);
     return (
       <div className="flex h-full items-center justify-center rounded-card border border-red-200 bg-red-50 text-xs text-red-700">
         Falha ao carregar Google Maps: {String(loadError.message ?? loadError)}
@@ -102,14 +104,21 @@ export function MapaMonitoramento({
     <div className="h-full w-full overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <GoogleMap
         mapContainerStyle={containerStyle}
-        center={DEFAULT_CENTER}
+        center={SAO_PAULO_CENTER}
         zoom={DEFAULT_ZOOM}
         options={mapOptions}
         onLoad={onLoad}
         onUnmount={onUnmount}
       >
         {showRotas &&
-          rotas.map((r) => <RotaPolyline key={`rota-${r.idViagem}`} data={r} />)}
+          rotas.map((r) => (
+            <RotaLayer
+              key={`rota-${r.idViagem}`}
+              data={r}
+              selected={selectedViagemId === r.idViagem}
+              onSelect={() => onSelectViagem(r.idViagem)}
+            />
+          ))}
 
         {showLocais &&
           locais.map((l) => (
