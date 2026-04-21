@@ -9,14 +9,14 @@ Fonte única de verdade para "quem está logado no frontend". É o único ponto 
 {
   user: AuthUser | null;
   loading: boolean;
-  login(usuario, senha): Promise<void>;
+  login(email, senha): Promise<void>;
   logout(): Promise<void>;
 }
 ```
 
 ### Ciclo de vida
 1. **Mount**: chama `GET /auth/me` com `withCredentials`. Se 200 → `user` setado. Se falhar → `user = null`. Em ambos os casos, `loading=false` no fim.
-2. **`login(usuario, senha)`**: `POST /auth/login` → backend seta cookie HttpOnly → context armazena `user` retornado.
+2. **`login(email, senha)`**: `POST /auth/login` com `{ email, senha }` → backend busca o usuário pelo `EMAIL` (case-insensitive) → seta cookie HttpOnly → context armazena `user` retornado.
 3. **`logout()`**: `POST /auth/logout` → backend limpa cookie → context zera `user`.
 
 ### Decisões

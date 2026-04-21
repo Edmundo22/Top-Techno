@@ -8,15 +8,15 @@ export interface UsuarioRow {
 }
 
 export class UsuarioAuthRepository {
-  async findByUsuario(usuario: string): Promise<UsuarioRow | null> {
+  async findByEmail(email: string): Promise<UsuarioRow | null> {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('usuario', sql.NVarChar(100), usuario)
+      .input('email', sql.NVarChar(200), email)
       .query<UsuarioRow>(
         `SELECT ID_USUARIO, USUARIO, EMAIL, SENHA
          FROM [TOP_TECHNO].[dbo].[USUARIOS]
-         WHERE USUARIO = @usuario`,
+         WHERE LOWER(EMAIL) = @email`,
       );
 
     return result.recordset[0] ?? null;

@@ -8,7 +8,7 @@ import { extractErrorMessage } from '../services/api';
 export function LoginPage() {
   const { user, loading, login } = useAuth();
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState('');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function LoginPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await login(usuario.trim(), senha);
+      await login(email.trim(), senha);
       navigate('/monitoramento', { replace: true });
     } catch (err) {
       setError(extractErrorMessage(err, 'Não foi possível entrar.'));
@@ -69,20 +69,21 @@ export function LoginPage() {
             </span>
             <h1 className="text-xl font-semibold text-brand-ink">Entrar no painel logístico</h1>
             <p className="text-sm text-brand-ink-muted">
-              Use seu usuário e senha para acompanhar rotas e entregas da frota.
+              Use seu email e senha para acompanhar rotas e entregas da frota.
             </p>
           </div>
 
           <div className="space-y-4">
             <Input
-              label="Usuário"
-              name="usuario"
-              autoComplete="username"
+              label="Email"
+              name="email"
+              type="email"
+              autoComplete="email"
               autoFocus
               required
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
-              placeholder="seu.usuario"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nome@empresa.com"
             />
             <Input
               label="Senha"

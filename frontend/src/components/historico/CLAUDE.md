@@ -16,7 +16,7 @@ Historico.tsx (page)
   │    ├─ Posições        ← new google.maps.Marker (SVG carro) + InfoWindow (HTML string)
   │    │                      cor: verde (< 50 m), vermelho (≥ 50 m), roxo (ignição OFF — prioridade)
   │    ├─ Rotas           ← new google.maps.Polyline (azul #1d4ed8)
-  │    └─ Locais          ← new google.maps.Marker (pin padrão) + InfoWindow com botão de raio (Circle)
+  │    └─ Locais          ← new google.maps.Marker (pin preto SVG) + InfoWindow com botão de raio (Circle)
   └─ MapLegend            ← overlay absoluto, pill "Legenda" que abre um card e tem botão de fechar
 ```
 
