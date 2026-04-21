@@ -20,6 +20,7 @@ export function MonitoramentoPage() {
   const [showRotas, setShowRotas] = useState(false);
   const [showLocais, setShowLocais] = useState(false);
   const [selectedViagemId, setSelectedViagemId] = useState<number | null>(null);
+  const [mapResetKey, setMapResetKey] = useState(0);
 
   const veiculosPoll = useLivePoll<VeiculosResponse>(monitoramentoEndpoints.veiculos, {
     intervalMs: POLL_INTERVAL_MS,
@@ -41,11 +42,21 @@ export function MonitoramentoPage() {
     logData('monitoramento veiculos', veiculos);
   }, [veiculos]);
 
+  const resetMap = () => {
+    setMapResetKey((k) => k + 1);
+    veiculosPoll.refetch();
+    if (showLocais) locaisPoll.refetch();
+    logSuccess('mapa reiniciado', { showLocais });
+  };
+
   const handleToggleRotas = () => {
     setShowRotas((v) => {
       const next = !v;
       logSuccess('toggle rotas', { on: next });
-      if (!next) setSelectedViagemId(null);
+      if (!next) {
+        setSelectedViagemId(null);
+        resetMap();
+      }
       return next;
     });
   };
@@ -111,6 +122,7 @@ export function MonitoramentoPage() {
             showLocais={showLocais}
             selectedViagemId={selectedViagemId}
             onSelectViagem={handleSelectViagem}
+            resetKey={mapResetKey}
           />
         </section>
 
