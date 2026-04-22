@@ -9,6 +9,9 @@ import { VeiculoMarker } from './VeiculoMarker';
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
 const ROUTE_COLOR = '#1d4ed8';
+const ROUTE_COLOR_SELECTED = '#8fd5f5';
+const ROUTE_COLOR_DIMMED = '#d1d5db';
+const ENDPOINT_COLOR_DIMMED = '#9ca3af';
 
 const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
@@ -106,16 +109,24 @@ export function MapaMonitoramento({
       }
       if (path.length === 0) return;
 
+      const hasSelection = selectedViagemId != null;
       const isSelected = selectedViagemId === rota.idViagem;
+      const isDimmed = hasSelection && !isSelected;
+
+      const polylineColor = isSelected
+        ? ROUTE_COLOR_SELECTED
+        : isDimmed
+        ? ROUTE_COLOR_DIMMED
+        : ROUTE_COLOR;
 
       const polyline = new google.maps.Polyline({
         path,
         geodesic: false,
-        strokeColor: ROUTE_COLOR,
+        strokeColor: polylineColor,
         strokeOpacity: isSelected ? 1 : 0.85,
         strokeWeight: isSelected ? 6 : 4,
         clickable: true,
-        zIndex: isSelected ? 8 : 5,
+        zIndex: isSelected ? 8 : isDimmed ? 3 : 5,
         map,
       });
       polyline.addListener('click', () => onSelectViagem(rota.idViagem));
@@ -123,7 +134,11 @@ export function MapaMonitoramento({
 
       const endpointIcon: google.maps.Symbol = {
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: ROUTE_COLOR,
+        fillColor: isSelected
+          ? ROUTE_COLOR_SELECTED
+          : isDimmed
+          ? ENDPOINT_COLOR_DIMMED
+          : ROUTE_COLOR,
         fillOpacity: 1,
         strokeColor: '#ffffff',
         strokeWeight: 2,
