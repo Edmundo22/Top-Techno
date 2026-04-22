@@ -10,6 +10,7 @@ Camada de **infraestrutura** do banco. Responsável por abrir e expor o pool de 
 - **Pool singleton**: uma única `Promise<ConnectionPool>` é reutilizada por todo o processo. Não criamos pools por request.
 - **Reset em erro de conexão**: se o primeiro `.connect()` falhar, a Promise é descartada para permitir uma retentativa.
 - **Parâmetros sempre tipados**: qualquer repository que usa o pool deve chamar `request.input('nome', sql.TipoDeDado, valor)` — nunca concatenar strings no SQL (anti-SQLi).
+- **`options.useUTC: false`**: o SQL Server grava `datetime` sem timezone. Com o default (`useUTC: true`) o driver `tedious` interpreta o valor como UTC e o converte pra hora local, o que gera um offset de 3h (ex.: DB tem `10:23:32`, Node entrega `07:23:32`). Com `useUTC: false`, o driver lê como hora local do processo Node — exige que o servidor Node rode na mesma timezone em que o SQL Server grava (Brasil UTC-3).
 
 ## Como usar em um repository
 
