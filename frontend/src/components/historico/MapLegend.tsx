@@ -10,7 +10,7 @@ export function MapLegend() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="pointer-events-auto absolute bottom-4 right-4 z-10 flex flex-col items-end gap-2">
+    <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex flex-col items-start gap-2">
       {open && (
         <div className="rounded-card border border-brand-line bg-white p-3 shadow-card">
           <div className="mb-2 flex items-center justify-between gap-6">

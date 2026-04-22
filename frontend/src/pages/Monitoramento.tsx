@@ -76,7 +76,7 @@ export function MonitoramentoPage() {
   return (
     <AppLayout title="Monitoramento" subtitle="Operação ao vivo">
       <div className="flex h-full flex-col gap-3">
-        <section className="flex flex-wrap items-center gap-2">
+        <section className="flex flex-wrap items-center justify-center gap-2">
           <ClockCard />
           <LastUpdateBadge
             lastUpdate={veiculosPoll.lastUpdate}
@@ -107,7 +107,7 @@ export function MonitoramentoPage() {
           />
         </section>
 
-        <section className="h-[calc(100vh-220px)] min-h-[480px]">
+        <section className="min-h-[480px] flex-1">
           <MapaMonitoramento
             veiculos={veiculos}
             rotas={rotas}
