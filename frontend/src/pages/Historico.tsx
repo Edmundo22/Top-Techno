@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { MapaHistorico } from '../components/historico/MapaHistorico';
+import { PlacasList } from '../components/historico/PlacasList';
 import { ToggleChip } from '../components/monitoramento/ToggleChip';
 import { extractErrorMessage } from '../services/api';
 import {
@@ -24,6 +25,7 @@ export function HistoricoPage() {
   const [showPosicoes, setShowPosicoes] = useState(true);
   const [showRotas, setShowRotas] = useState(false);
   const [showLocais, setShowLocais] = useState(false);
+  const [selectedPlacas, setSelectedPlacas] = useState<string[]>([]);
 
   const [posicoes, setPosicoes] = useState<Posicao[]>([]);
   const [rotas, setRotas] = useState<RotaHistorico[]>([]);
@@ -37,6 +39,7 @@ export function HistoricoPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setSelectedPlacas([]);
 
     Promise.all([
       fetchPosicoesHistorico(dataSelecionada),
@@ -77,10 +80,42 @@ export function HistoricoPage() {
     [locais],
   );
 
+  const placasAtivas = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of posicoes) {
+      if (p.placa) set.add(p.placa);
+    }
+    return Array.from(set).sort();
+  }, [posicoes]);
+
+  const posicoesFiltradas = useMemo(() => {
+    if (showPosicoes) return posicoes;
+    if (selectedPlacas.length === 0) return [];
+    const selected = new Set(selectedPlacas);
+    return posicoes.filter((p) => p.placa != null && selected.has(p.placa));
+  }, [posicoes, showPosicoes, selectedPlacas]);
+
+  const handleTogglePosicoes = useCallback(() => {
+    setShowPosicoes((prev) => {
+      const next = !prev;
+      if (next) setSelectedPlacas([]);
+      return next;
+    });
+  }, []);
+
+  const handleTogglePlaca = useCallback((placa: string) => {
+    setShowPosicoes(false);
+    setSelectedPlacas((prev) =>
+      prev.includes(placa) ? prev.filter((p) => p !== placa) : [...prev, placa],
+    );
+  }, []);
+
+  const posicoesVisiveis = showPosicoes || selectedPlacas.length > 0;
+
   return (
     <AppLayout title="Histórico" subtitle="Reveja os dados de um dia passado">
       <div className="flex h-full flex-col gap-3">
-        <section className="flex flex-wrap items-center gap-2">
+        <section className="flex flex-wrap items-center justify-center gap-2">
           <label className="inline-flex items-center gap-2 rounded-full border border-brand-line bg-white px-3 py-1.5 text-xs font-semibold text-brand-ink shadow-card">
             <span className="text-brand-ink-muted">Data:</span>
             <input
@@ -96,7 +131,7 @@ export function HistoricoPage() {
 
           <ToggleChip
             active={showPosicoes}
-            onClick={() => setShowPosicoes((v) => !v)}
+            onClick={handleTogglePosicoes}
             label="Posições"
             count={showPosicoes ? posicoes.length : undefined}
           />
@@ -123,15 +158,22 @@ export function HistoricoPage() {
           )}
         </section>
 
-        <section className="h-[calc(100vh-180px)] min-h-[480px]">
-          <MapaHistorico
-            posicoes={posicoes}
-            rotas={rotas}
-            locais={locais}
-            showPosicoes={showPosicoes}
-            showRotas={showRotas}
-            showLocais={showLocais}
+        <section className="flex min-h-[480px] flex-1 gap-3">
+          <PlacasList
+            placas={placasAtivas}
+            selectedPlacas={selectedPlacas}
+            onTogglePlaca={handleTogglePlaca}
           />
+          <div className="min-w-0 flex-1">
+            <MapaHistorico
+              posicoes={posicoesFiltradas}
+              rotas={rotas}
+              locais={locais}
+              showPosicoes={posicoesVisiveis}
+              showRotas={showRotas}
+              showLocais={showLocais}
+            />
+          </div>
         </section>
       </div>
     </AppLayout>

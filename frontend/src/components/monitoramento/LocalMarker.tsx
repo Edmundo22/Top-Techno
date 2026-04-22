@@ -5,10 +5,22 @@ import { formatBRDateTimeFull } from '../../utils/datetime';
 
 interface LocalMarkerProps {
   data: LocalDia;
-  color?: string;
 }
 
-export function LocalMarker({ data, color = '#000000' }: LocalMarkerProps) {
+const PIN_PATH =
+  'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z';
+
+const COLOR_NAO_ENTROU = '#dc2626';
+const COLOR_ESTA_LA = '#eab308';
+const COLOR_CONCLUIDO = '#16a34a';
+
+function pickLocalColor(data: LocalDia): string {
+  if (data.dtEntReal != null && data.dtSaiReal != null) return COLOR_CONCLUIDO;
+  if (data.dtEntReal != null) return COLOR_ESTA_LA;
+  return COLOR_NAO_ENTROU;
+}
+
+export function LocalMarker({ data }: LocalMarkerProps) {
   const [openInfo, setOpenInfo] = useState(false);
   const [showRaio, setShowRaio] = useState(false);
 
@@ -19,9 +31,26 @@ export function LocalMarker({ data, color = '#000000' }: LocalMarkerProps) {
 
   if (!position) return null;
 
+  const color = pickLocalColor(data);
+
+  const icon: google.maps.Symbol = {
+    path: PIN_PATH,
+    fillColor: color,
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
+    strokeWeight: 1.5,
+    scale: 1.6,
+    anchor: new google.maps.Point(12, 22),
+  };
+
   return (
     <>
-      <Marker position={position} onClick={() => setOpenInfo((v) => !v)} zIndex={10} />
+      <Marker
+        position={position}
+        icon={icon}
+        onClick={() => setOpenInfo((v) => !v)}
+        zIndex={10}
+      />
 
       {showRaio && data.raio != null && data.raio > 0 && (
         <Circle
@@ -42,7 +71,7 @@ export function LocalMarker({ data, color = '#000000' }: LocalMarkerProps) {
         <InfoWindow
           position={position}
           onCloseClick={() => setOpenInfo(false)}
-          options={{ pixelOffset: new google.maps.Size(0, -14) }}
+          options={{ pixelOffset: new google.maps.Size(0, -32) }}
         >
           <div className="min-w-[240px] max-w-[300px] space-y-1 text-xs text-brand-ink">
             <div className="text-sm font-semibold">{data.endereco ?? 'Sem endereço'}</div>

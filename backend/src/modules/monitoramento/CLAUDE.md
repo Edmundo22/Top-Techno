@@ -6,7 +6,7 @@ Módulo responsável pelos dados da tela de monitoramento ao vivo: posição atu
 
 | Método | Path                        | Descrição                                                                                          |
 |--------|-----------------------------|----------------------------------------------------------------------------------------------------|
-| GET    | `/monitoramento/veiculos`   | Veículos (`TB_VEICULO`) com viagem cujo `DT_VIAGEM = hoje`. Posição e telemetria atuais.           |
+| GET    | `/monitoramento/veiculos`   | Veículos de `TB_VEICULO` cuja `DT_ULT_POSICAO` é de hoje. Posição e telemetria ao vivo.            |
 | GET    | `/monitoramento/rotas`      | Viagens de hoje + `POLYLINE` da ficha (`FT_CABECALHO`) + status + placa + datas início/fim.       |
 | GET    | `/monitoramento/locais`     | Locais referenciados por `TB_VIAGEM_ENTRADA` das viagens de hoje, com previstas e reais de entrada/saída. |
 
@@ -14,10 +14,15 @@ Todas retornam `{ data: { ... } }` via `ok(res, ...)`.
 
 ## Regra de "dia atual"
 
-O corte "dia atual" é feito no SQL com `CAST(vi.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)`. **Isso usa o relógio do servidor SQL Server.**
+O corte "dia atual" depende da rota:
+
+- **Veículos**: `CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)` — quem reportou posição hoje aparece no mapa, independe de ter viagem cadastrada.
+- **Rotas / Locais**: `CAST(vi.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)` — só viagens planejadas/andando hoje.
+
+Ambos usam o relógio do SQL Server.
 
 - Se o SQL Server estiver em fuso Brasil (UTC-3), funciona direto.
-- Se estiver em UTC, trocar por `CAST(SWITCHOFFSET(SYSDATETIMEOFFSET(), '-03:00') AS DATE)` — caso apareça esse sintoma (veículos de "ontem" às 21h desaparecendo cedo), é esse o ponto de edição.
+- Se estiver em UTC, trocar `GETDATE()` por `CAST(SWITCHOFFSET(SYSDATETIMEOFFSET(), '-03:00') AS DATE)` — caso apareça o sintoma (veículos/viagens de "ontem" às 21h desaparecendo cedo), é esse o ponto de edição.
 
 ## Formato das datas na resposta
 

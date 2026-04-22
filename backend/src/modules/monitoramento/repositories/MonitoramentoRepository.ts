@@ -43,13 +43,12 @@ export class MonitoramentoRepository {
   async listVeiculosDia(): Promise<VeiculoRow[]> {
     const pool = await getPool();
     const result = await pool.request().query<VeiculoRow>(
-      `SELECT DISTINCT
+      `SELECT
          v.ID_VEICULO, v.PLACA, v.LATITUDE, v.LONGITUDE,
          v.DT_ULT_POSICAO, v.IGNICAO, v.VELOCIDADE,
          v.ID_VIAGEM, v.ID_VIAGEM_STATUS
        FROM [TOP_TECHNO].[dbo].[TB_VEICULO] v
-       INNER JOIN [TOP_TECHNO].[dbo].[TB_VIAGEM] vi ON vi.ID_VEICULO = v.ID_VEICULO
-       WHERE CAST(vi.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)
+       WHERE CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)
          AND v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL`,
     );
     return result.recordset;
