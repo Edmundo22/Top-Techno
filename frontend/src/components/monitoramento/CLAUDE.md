@@ -44,8 +44,20 @@ As rotas (polyline + I/F) **não usam** os wrappers declarativos de `@react-goog
 - Label `PLACA` renderizado via `<OverlayView>` posicionado acima do ícone, **mesma cor** do ícone.
 - Polylines de rota: **azul** `#1d4ed8` (blue-700); quando a viagem está selecionada, `strokeWeight` sobe de 4 para 6 e opacidade vai para 1.
 - Markers de início/fim da rota: círculos azuis `#1d4ed8` (scale 7) com label branco **I** (início) e **F** (fim). Menores que veículos e locais — hierarquia intencional.
-- Marker do local: **pin vermelho padrão do Google Maps** (sem `icon` custom em `<Marker>`).
-- Círculo do raio: fica na cor `color` prop do `LocalMarker` (default preto) com `fillOpacity: 0.12`.
+- Marker do local: pin SVG teardrop colorido conforme o status de entrada/saída da `TB_VIAGEM_ENTRADA` (ver "Cor do local" abaixo).
+- Círculo do raio: mesma cor do pin com `fillOpacity: 0.12`.
+
+## Cor do local
+
+Calculada em `LocalMarker.pickLocalColor(data)` a partir de `dtEntReal` / `dtSaiReal` (origem: `TB_VIAGEM_ENTRADA.DT_ENT_REAL` / `DT_SAI_REAL`):
+
+| Estado                              | Cor            |
+|-------------------------------------|----------------|
+| Entrou e saiu (ambos preenchidos)   | verde `#16a34a`|
+| Entrou mas não saiu (só `dtEntReal`)| amarelo `#eab308`|
+| Nenhum dos dois                     | vermelho `#dc2626`|
+
+Quando o `dtSaiReal` chegar com `dtEntReal` nulo (caso raro/inconsistente), cai no ramo "ainda não chegou" — o veículo não pode sair sem antes entrar.
 
 Cores dos veículos virarão condicionais por status em iteração seguinte — hoje todos pretos.
 
