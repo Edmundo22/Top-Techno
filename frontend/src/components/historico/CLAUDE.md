@@ -12,13 +12,29 @@ Componentes da tela `/historico`: seletor de data, mapa de um dia passado com po
 ```
 Historico.tsx (page)
   ├─ Barra topo           ← <input type="date"> + 3 ToggleChip (Posições / Rotas / Locais)
-  ├─ MapaHistorico        ← GoogleMap com 3 camadas imperativas independentes
-  │    ├─ Posições        ← new google.maps.Marker (SVG carro) + InfoWindow (HTML string)
-  │    │                      cor: verde (< 50 m), vermelho (≥ 50 m), roxo (ignição OFF — prioridade)
-  │    ├─ Rotas           ← new google.maps.Polyline (azul #1d4ed8)
-  │    └─ Locais          ← new google.maps.Marker (pin preto SVG) + InfoWindow com botão de raio (Circle)
-  └─ MapLegend            ← overlay absoluto, pill "Legenda" que abre um card e tem botão de fechar
+  ├─ Área mapa (flex row)
+  │    ├─ PlacasList       ← coluna à esquerda, pílulas verticais das placas ativas no dia
+  │    └─ MapaHistorico    ← GoogleMap com 3 camadas imperativas independentes
+  │         ├─ Posições    ← new google.maps.Marker (SVG carro) + InfoWindow (HTML string)
+  │         │                 cor: verde (< 50 m), vermelho (≥ 50 m), roxo (ignição OFF — prioridade)
+  │         ├─ Rotas       ← new google.maps.Polyline (azul #1d4ed8)
+  │         └─ Locais      ← new google.maps.Marker (pin preto SVG) + InfoWindow com botão de raio (Circle)
+  └─ MapLegend             ← overlay absoluto no canto inferior esquerdo do mapa
 ```
+
+## Filtro por placa
+
+A `PlacasList` renderiza uma pílula por placa ativa no dia (distintas de `posicoes[].placa`). A página mantém dois estados coordenados:
+
+- `showPosicoes` (chip "Posições" na barra topo) → mostra **todas** as posições.
+- `selectedPlacas: string[]` → mostra apenas os veículos escolhidos individualmente.
+
+Regras:
+
+- Ativar "Posições" zera `selectedPlacas` (invariant: as duas modalidades não coexistem).
+- Clicar em qualquer placa desliga `showPosicoes` automaticamente e alterna a placa em `selectedPlacas`.
+- Trocar a data zera `selectedPlacas` (a lista de placas ativas muda).
+- A página filtra o array que passa pro `MapaHistorico` (`posicoesFiltradas`) e derruga `showPosicoes` como `showPosicoes || selectedPlacas.length > 0` para o mapa decidir se renderiza a camada ou não. O mapa não conhece a lista — recebe o array já filtrado.
 
 ## Padrão imperativo
 
