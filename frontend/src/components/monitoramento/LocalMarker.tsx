@@ -83,10 +83,20 @@ export function LocalMarker({ data }: LocalMarkerProps) {
               Previsto
             </div>
             <div>
+              <span
+                className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                style={{ backgroundColor: COLOR_ESTA_LA }}
+                aria-hidden
+              />
               <span className="text-brand-ink-muted">Entrada: </span>
               {formatBRDateTimeFull(data.dtEntPrevista)}
             </div>
             <div>
+              <span
+                className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                style={{ backgroundColor: COLOR_ESTA_LA }}
+                aria-hidden
+              />
               <span className="text-brand-ink-muted">Saída: </span>
               {formatBRDateTimeFull(data.dtSaiPrevista)}
             </div>
@@ -94,10 +104,20 @@ export function LocalMarker({ data }: LocalMarkerProps) {
               Realizado
             </div>
             <div>
+              <span
+                className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                style={{ backgroundColor: COLOR_CONCLUIDO }}
+                aria-hidden
+              />
               <span className="text-brand-ink-muted">Entrada: </span>
               {formatBRDateTimeFull(data.dtEntReal)}
             </div>
             <div>
+              <span
+                className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
+                style={{ backgroundColor: COLOR_CONCLUIDO }}
+                aria-hidden
+              />
               <span className="text-brand-ink-muted">Saída: </span>
               {formatBRDateTimeFull(data.dtSaiReal)}
             </div>
