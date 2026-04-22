@@ -42,8 +42,14 @@ As rotas (polyline + I/F) **não usam** os wrappers declarativos de `@react-goog
 
 - Ícone do veículo: SVG do Material `directions_car` preenchido em **preto** (`#000000`), `scale: 1.6`.
 - Label `PLACA` renderizado via `<OverlayView>` posicionado acima do ícone, **mesma cor** do ícone.
-- Polylines de rota: **azul** `#1d4ed8` (blue-700); quando a viagem está selecionada, `strokeWeight` sobe de 4 para 6 e opacidade vai para 1.
-- Markers de início/fim da rota: círculos azuis `#1d4ed8` (scale 7) com label branco **I** (início) e **F** (fim). Menores que veículos e locais — hierarquia intencional.
+- Polylines de rota:
+  - Sem seleção (default): azul `#1d4ed8` (blue-700), weight 4, opacity 0.85.
+  - Rota selecionada: azul claro `#8fd5f5`, weight 6, opacity 1.
+  - Rotas não selecionadas quando há outra selecionada: cinza claro `#d1d5db`, weight 4, opacity 0.85, `zIndex` mais baixo pra ficar embaixo.
+- Markers de início/fim: círculos (scale 7) com label branco **I** / **F**. Cor acompanha a regra da polyline:
+  - Sem seleção: `#1d4ed8`.
+  - Selecionada: `#8fd5f5`.
+  - Não selecionadas (quando há outra selecionada): cinza `#9ca3af` (um pouco mais escuro que a linha pra o label branco continuar legível).
 - Marker do local: pin SVG teardrop colorido conforme o status de entrada/saída da `TB_VIAGEM_ENTRADA` (ver "Cor do local" abaixo).
 - Círculo do raio: mesma cor do pin com `fillOpacity: 0.12`.
 
