@@ -11,6 +11,7 @@ export const dbConfig: SqlConfig = {
     encrypt: env.DB_ENCRYPT,
     trustServerCertificate: env.DB_TRUST_SERVER_CERTIFICATE,
     enableArithAbort: true,
+    useUTC: false,
   },
   pool: {
     max: 10,
