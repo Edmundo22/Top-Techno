@@ -10,7 +10,7 @@ import { VeiculoMarker } from './VeiculoMarker';
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
 const ROUTE_COLOR = '#1d4ed8';
-const ROUTE_COLOR_SELECTED = '#8fd5f5';
+const ROUTE_COLOR_SELECTED = '#dc2626';
 const ROUTE_COLOR_DIMMED = '#d1d5db';
 const ENDPOINT_COLOR_DIMMED = '#9ca3af';
 
