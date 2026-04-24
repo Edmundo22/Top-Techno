@@ -1,4 +1,4 @@
-import { getPool } from '../../../infra/database/connection';
+import { getPool, sql } from '../../../infra/database/connection';
 
 export interface VeiculoRow {
   ID_VEICULO: number;
@@ -39,17 +39,39 @@ export interface LocalRow {
   DT_SAI_REAL: Date | string | null;
 }
 
+export interface ViagemEntradaRow {
+  DT: string | null;
+  LOCAL_NOME: string | null;
+  ENT_PREV: string | null;
+  ENT_REAL: string | null;
+  SAI_PREV: string | null;
+  SAI_REAL: string | null;
+  T_LOCAL: number | null;
+  ORDEM: number | null;
+  DT_ENT_PREVISTA_RAW: Date | string | null;
+  DT_ENT_REAL_RAW: Date | string | null;
+  DT_SAI_PREVISTA_RAW: Date | string | null;
+  DT_SAI_REAL_RAW: Date | string | null;
+}
+
 export class MonitoramentoRepository {
   async listVeiculosDia(): Promise<VeiculoRow[]> {
     const pool = await getPool();
     const result = await pool.request().query<VeiculoRow>(
       `SELECT
-         v.ID_VEICULO, v.PLACA, v.LATITUDE, v.LONGITUDE,
-         v.DT_ULT_POSICAO, v.IGNICAO, v.VELOCIDADE,
-         v.ID_VIAGEM, v.ID_VIAGEM_STATUS
-       FROM [TOP_TECHNO].[dbo].[TB_VEICULO] v
-       WHERE CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)
-         AND v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL`,
+         veic.ID_VEICULO, veic.PLACA, veic.LATITUDE, veic.LONGITUDE,
+         veic.DT_ULT_POSICAO, veic.IGNICAO, veic.VELOCIDADE, veic.ID_VIAGEM_STATUS,
+         (SELECT TOP(1) v2.ID_VIAGEM
+            FROM [TOP_TECHNO].[dbo].[TB_VIAGEM] v2
+           WHERE v2.ID_VEICULO = veic.ID_VEICULO
+             AND CAST(v2.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)) AS ID_VIAGEM
+       FROM (
+         SELECT v.ID_VEICULO, v.PLACA, v.LATITUDE, v.LONGITUDE,
+                v.DT_ULT_POSICAO, v.IGNICAO, v.VELOCIDADE, v.ID_VIAGEM_STATUS
+           FROM [TOP_TECHNO].[dbo].[TB_VEICULO] v
+          WHERE CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)
+            AND v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL
+       ) AS veic`,
     );
     return result.recordset;
   }
@@ -90,6 +112,33 @@ export class MonitoramentoRepository {
          AND l.LATITUDE IS NOT NULL AND l.LONGITUDE IS NOT NULL
        ORDER BY ve.ID_VIAGEM ASC, ve.ORDEM ASC`,
     );
+    return result.recordset;
+  }
+
+  async listViagemEntradas(idViagem: number): Promise<ViagemEntradaRow[]> {
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input('idViagem', sql.Int, idViagem)
+      .query<ViagemEntradaRow>(
+        `SELECT
+           CONVERT(varchar, ent.DT_ENT_PREVISTA, 103) AS DT,
+           loc.PONTO_PARADA AS LOCAL_NOME,
+           CONVERT(varchar, ent.DT_ENT_PREVISTA, 108) AS ENT_PREV,
+           CONVERT(varchar, ent.DT_ENT_REAL,     108) AS ENT_REAL,
+           CONVERT(varchar, ent.DT_SAI_PREVISTA, 108) AS SAI_PREV,
+           CONVERT(varchar, ent.DT_SAI_REAL,     108) AS SAI_REAL,
+           DATEDIFF(MI, ent.DT_ENT_REAL, ent.DT_SAI_REAL) AS T_LOCAL,
+           ent.ORDEM,
+           ent.DT_ENT_PREVISTA AS DT_ENT_PREVISTA_RAW,
+           ent.DT_ENT_REAL     AS DT_ENT_REAL_RAW,
+           ent.DT_SAI_PREVISTA AS DT_SAI_PREVISTA_RAW,
+           ent.DT_SAI_REAL     AS DT_SAI_REAL_RAW
+         FROM [TOP_TECHNO].[dbo].[TB_VIAGEM_ENTRADA] ent
+         INNER JOIN [TOP_TECHNO].[dbo].[TB_LOCAL] loc ON loc.ID_LOCAL = ent.ID_LOCAL
+         WHERE ent.ID_VIAGEM = @idViagem
+         ORDER BY ent.ORDEM`,
+      );
     return result.recordset;
   }
 }

@@ -8,3 +8,11 @@ export function validateBody<T>(schema: ZodSchema<T>) {
     next();
   };
 }
+
+export function validateQuery<T>(schema: ZodSchema<T>) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const parsed = schema.parse(req.query);
+    (req as unknown as { validatedQuery: T }).validatedQuery = parsed;
+    next();
+  };
+}
