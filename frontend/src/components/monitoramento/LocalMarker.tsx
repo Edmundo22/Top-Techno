@@ -10,14 +10,24 @@ interface LocalMarkerProps {
 const PIN_PATH =
   'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z';
 
-const COLOR_NAO_ENTROU = '#dc2626';
-const COLOR_ESTA_LA = '#eab308';
-const COLOR_CONCLUIDO = '#16a34a';
+const COLOR_LOCAL_SEM_DADO = '#000000';
+const COLOR_LOCAL_NO_PRAZO = '#1d4ed8';
+const COLOR_LOCAL_NO_HORARIO_ATIVO = '#7c3aed';
+const COLOR_LOCAL_ATRASADO = '#dc2626';
+
+const COLOR_DOT_PREVISTO = '#eab308';
+const COLOR_DOT_REALIZADO = '#16a34a';
 
 function pickLocalColor(data: LocalDia): string {
-  if (data.dtEntReal != null && data.dtSaiReal != null) return COLOR_CONCLUIDO;
-  if (data.dtEntReal != null) return COLOR_ESTA_LA;
-  return COLOR_NAO_ENTROU;
+  const { dtEntPrevista, dtSaiPrevista, dtEntReal, dtSaiReal } = data;
+  if (dtEntReal == null && dtSaiReal == null) return COLOR_LOCAL_SEM_DADO;
+  const entAtrasada =
+    dtEntReal != null && dtEntPrevista != null && dtEntReal > dtEntPrevista;
+  const saiAtrasada =
+    dtSaiReal != null && dtSaiPrevista != null && dtSaiReal > dtSaiPrevista;
+  if (entAtrasada || saiAtrasada) return COLOR_LOCAL_ATRASADO;
+  if (dtEntReal != null && dtSaiReal == null) return COLOR_LOCAL_NO_HORARIO_ATIVO;
+  return COLOR_LOCAL_NO_PRAZO;
 }
 
 export function LocalMarker({ data }: LocalMarkerProps) {
@@ -85,7 +95,7 @@ export function LocalMarker({ data }: LocalMarkerProps) {
             <div>
               <span
                 className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
-                style={{ backgroundColor: COLOR_ESTA_LA }}
+                style={{ backgroundColor: COLOR_DOT_PREVISTO }}
                 aria-hidden
               />
               <span className="text-brand-ink-muted">Entrada: </span>
@@ -94,7 +104,7 @@ export function LocalMarker({ data }: LocalMarkerProps) {
             <div>
               <span
                 className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
-                style={{ backgroundColor: COLOR_ESTA_LA }}
+                style={{ backgroundColor: COLOR_DOT_PREVISTO }}
                 aria-hidden
               />
               <span className="text-brand-ink-muted">Saída: </span>
@@ -106,7 +116,7 @@ export function LocalMarker({ data }: LocalMarkerProps) {
             <div>
               <span
                 className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
-                style={{ backgroundColor: COLOR_CONCLUIDO }}
+                style={{ backgroundColor: COLOR_DOT_REALIZADO }}
                 aria-hidden
               />
               <span className="text-brand-ink-muted">Entrada: </span>
@@ -115,7 +125,7 @@ export function LocalMarker({ data }: LocalMarkerProps) {
             <div>
               <span
                 className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle"
-                style={{ backgroundColor: COLOR_CONCLUIDO }}
+                style={{ backgroundColor: COLOR_DOT_REALIZADO }}
                 aria-hidden
               />
               <span className="text-brand-ink-muted">Saída: </span>

@@ -4,6 +4,7 @@ import type { LocalDia, Rota, Veiculo } from '../../services/monitoramentoApi';
 import { formatBRDateTime } from '../../utils/datetime';
 import { logError, logSuccess } from '../../utils/logger';
 import { LocalMarker } from './LocalMarker';
+import { MapLegend } from './MapLegend';
 import { VeiculoMarker } from './VeiculoMarker';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
@@ -12,6 +13,12 @@ const ROUTE_COLOR = '#1d4ed8';
 const ROUTE_COLOR_SELECTED = '#8fd5f5';
 const ROUTE_COLOR_DIMMED = '#d1d5db';
 const ENDPOINT_COLOR_DIMMED = '#9ca3af';
+
+const COLOR_VEIC_COM_VIAGEM = '#16a34a';
+const COLOR_VEIC_SEM_VIAGEM = '#000000';
+
+const pickVeiculoColor = (v: Veiculo): string =>
+  (v.idViagem ?? 0) > 0 ? COLOR_VEIC_COM_VIAGEM : COLOR_VEIC_SEM_VIAGEM;
 
 const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
@@ -224,7 +231,7 @@ export function MapaMonitoramento({
   }
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
+    <div className="relative h-full w-full overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={SAO_PAULO_CENTER}
@@ -239,9 +246,14 @@ export function MapaMonitoramento({
           ))}
 
         {veiculos.map((v) => (
-          <VeiculoMarker key={`veic-${v.idVeiculo}`} data={v} />
+          <VeiculoMarker
+            key={`veic-${v.idVeiculo}`}
+            data={v}
+            color={pickVeiculoColor(v)}
+          />
         ))}
       </GoogleMap>
+      <MapLegend />
     </div>
   );
 }
