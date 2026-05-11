@@ -33,9 +33,14 @@ Veja [README.md](README.md).
 ## Documentação modular
 Cada parte grande do projeto tem `CLAUDE.md`:
 - [backend/CLAUDE.md](backend/CLAUDE.md)
-- [backend/modules/auth/CLAUDE.md](backend/modules/auth/CLAUDE.md)
-- [backend/modules/usuarios/CLAUDE.md](backend/modules/usuarios/CLAUDE.md)
-- [backend/shared/middlewares/CLAUDE.md](backend/shared/middlewares/CLAUDE.md)
-- [backend/infra/database/CLAUDE.md](backend/infra/database/CLAUDE.md)
+- [backend/src/modules/auth/CLAUDE.md](backend/src/modules/auth/CLAUDE.md)
+- [backend/src/modules/usuarios/CLAUDE.md](backend/src/modules/usuarios/CLAUDE.md)
+- [backend/src/modules/monitoramento/CLAUDE.md](backend/src/modules/monitoramento/CLAUDE.md)
+- [backend/src/modules/historico/CLAUDE.md](backend/src/modules/historico/CLAUDE.md)
+- [backend/src/modules/locais/CLAUDE.md](backend/src/modules/locais/CLAUDE.md)
+- [backend/src/shared/middlewares/CLAUDE.md](backend/src/shared/middlewares/CLAUDE.md)
+- [backend/src/infra/database/CLAUDE.md](backend/src/infra/database/CLAUDE.md)
 - [frontend/CLAUDE.md](frontend/CLAUDE.md)
 - [frontend/src/contexts/CLAUDE.md](frontend/src/contexts/CLAUDE.md)
+- [frontend/src/components/cadastros/CLAUDE.md](frontend/src/components/cadastros/CLAUDE.md)
+- [frontend/src/components/cadastros/locais/CLAUDE.md](frontend/src/components/cadastros/locais/CLAUDE.md)

@@ -8,10 +8,11 @@ const config: Config = {
         brand: {
           surface: '#ffffff',
           ink: '#1F2937',
-          'ink-soft': '#000000',
-          'ink-muted': '#000000',
+          'ink-soft': '#374151',
+          'ink-muted': '#9ca3af',
           line: '#e3e7e8',
           'line-soft': '#f1f3f4',
+          'line-strong': '#d4dadc',
           accent: '#b4e7ff',
           'accent-hover': '#8fd5f5',
           'accent-soft': '#e7f6fd',

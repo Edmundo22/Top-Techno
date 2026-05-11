@@ -83,5 +83,6 @@ Veja `.env.example`. A diferença entre local e produção é **apenas** esse ar
 - [modules/usuarios/CLAUDE.md](modules/usuarios/CLAUDE.md)
 - [modules/monitoramento/CLAUDE.md](modules/monitoramento/CLAUDE.md)
 - [modules/historico/CLAUDE.md](modules/historico/CLAUDE.md)
+- [modules/locais/CLAUDE.md](modules/locais/CLAUDE.md)
 - [shared/middlewares/CLAUDE.md](shared/middlewares/CLAUDE.md)
 - [infra/database/CLAUDE.md](infra/database/CLAUDE.md)

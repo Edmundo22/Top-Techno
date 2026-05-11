@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { CadastroLocaisPage } from '../pages/CadastroLocais';
 import { HistoricoPage } from '../pages/Historico';
 import { LoginPage } from '../pages/Login';
 import { MonitoramentoPage } from '../pages/Monitoramento';
@@ -21,6 +22,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <HistoricoPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cadastros/locais"
+        element={
+          <ProtectedRoute>
+            <CadastroLocaisPage />
           </ProtectedRoute>
         }
       />

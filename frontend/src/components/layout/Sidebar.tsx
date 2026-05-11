@@ -1,14 +1,36 @@
-import { NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 
-interface NavItem {
+interface NavLeaf {
+  to: string;
+  label: string;
+  icon?: JSX.Element;
+}
+
+interface NavGroup {
+  key: string;
+  label: string;
+  icon: JSX.Element;
+  children: NavLeaf[];
+}
+
+interface NavLink_ {
+  kind: 'link';
   to: string;
   label: string;
   icon: JSX.Element;
 }
 
+interface NavGroup_ {
+  kind: 'group';
+  group: NavGroup;
+}
+
+type NavItem = NavLink_ | NavGroup_;
+
 const items: NavItem[] = [
   {
+    kind: 'link',
     to: '/monitoramento',
     label: 'Monitoramento',
     icon: (
@@ -31,6 +53,7 @@ const items: NavItem[] = [
     ),
   },
   {
+    kind: 'link',
     to: '/historico',
     label: 'Histórico',
     icon: (
@@ -59,10 +82,50 @@ const items: NavItem[] = [
       </svg>
     ),
   },
+  {
+    kind: 'group',
+    group: {
+      key: 'cadastros',
+      label: 'Cadastros',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
+          <path
+            d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      children: [
+        { to: '/cadastros/locais', label: 'Locais' },
+        { to: '/cadastros/rotas', label: 'Rotas' },
+      ],
+    },
+  },
 ];
+
+const linkBase =
+  'group flex h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors';
+const linkInactive = 'text-white/75 hover:bg-white/5 hover:text-white';
+const linkActive = 'bg-brand-accent text-brand-ink';
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const initialGroupOpen: Record<string, boolean> = {};
+  for (const it of items) {
+    if (it.kind === 'group') {
+      initialGroupOpen[it.group.key] = it.group.children.some((c) =>
+        location.pathname.startsWith(c.to),
+      );
+    }
+  }
+  const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>(initialGroupOpen);
+
+  const toggleGroup = (key: string) =>
+    setGroupOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <aside
@@ -84,24 +147,95 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto py-3">
         <ul className="flex flex-col gap-1 px-2">
-          {items.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) =>
-                  `group flex h-10 items-center gap-3 rounded-lg px-3 text-sm transition-colors ${
-                    isActive
-                      ? 'bg-brand-accent text-brand-ink'
-                      : 'text-white/75 hover:bg-white/5 hover:text-white'
-                  } ${collapsed ? 'justify-center' : ''}`
-                }
-                end
-              >
-                <span className="shrink-0">{item.icon}</span>
-                {!collapsed && <span className="font-medium">{item.label}</span>}
-              </NavLink>
-            </li>
-          ))}
+          {items.map((item) => {
+            if (item.kind === 'link') {
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `${linkBase} ${isActive ? linkActive : linkInactive} ${
+                        collapsed ? 'justify-center' : ''
+                      }`
+                    }
+                    end
+                  >
+                    <span className="shrink-0">{item.icon}</span>
+                    {!collapsed && <span className="font-medium">{item.label}</span>}
+                  </NavLink>
+                </li>
+              );
+            }
+
+            const g = item.group;
+            const isOpen = groupOpen[g.key] ?? false;
+            const anyChildActive = g.children.some((c) => location.pathname.startsWith(c.to));
+
+            if (collapsed) {
+              return (
+                <li key={g.key}>
+                  <NavLink
+                    to={g.children[0]?.to ?? '#'}
+                    className={`${linkBase} justify-center ${
+                      anyChildActive ? linkActive : linkInactive
+                    }`}
+                    title={g.label}
+                  >
+                    <span className="shrink-0">{g.icon}</span>
+                  </NavLink>
+                </li>
+              );
+            }
+
+            return (
+              <li key={g.key} className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(g.key)}
+                  className={`${linkBase} w-full text-left ${
+                    anyChildActive ? 'text-white' : linkInactive
+                  }`}
+                  aria-expanded={isOpen}
+                >
+                  <span className="shrink-0">{g.icon}</span>
+                  <span className="flex-1 font-medium">{g.label}</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                    aria-hidden
+                  >
+                    <path
+                      d="M9 6l6 6-6 6"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+                {isOpen && (
+                  <ul className="mt-1 flex flex-col gap-1 pl-9">
+                    {g.children.map((child) => (
+                      <li key={child.to}>
+                        <NavLink
+                          to={child.to}
+                          className={({ isActive }) =>
+                            `flex h-8 items-center rounded-lg px-3 text-sm transition-colors ${
+                              isActive ? linkActive : linkInactive
+                            }`
+                          }
+                          end
+                        >
+                          {child.label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface LegendItem {
   color: string;
@@ -42,13 +42,17 @@ function LegendGroup({ title, items }: { title: string; items: LegendItem[] }) {
   );
 }
 
-export function MapLegend() {
+interface MapLegendProps {
+  extra?: ReactNode;
+}
+
+export function MapLegend({ extra }: MapLegendProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="pointer-events-auto absolute bottom-4 left-4 z-10 flex flex-col items-start gap-2">
+    <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex flex-col items-start gap-2">
       {open && (
-        <div className="rounded-card border border-brand-line bg-white p-3 shadow-card">
+        <div className="pointer-events-auto rounded-card border border-brand-line bg-white p-3 shadow-card">
           <div className="mb-2 flex items-center justify-between gap-6">
             <span className="text-xs font-semibold uppercase tracking-wider text-brand-ink">
               Legenda
@@ -56,7 +60,7 @@ export function MapLegend() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded p-0.5 text-brand-ink-muted transition-colors hover:bg-brand-line-soft hover:text-brand-ink"
+              className="rounded p-0.5 text-brand-ink-muted transition-colors hover:bg-brand-line-soft hover:text-brand-ink-soft"
               aria-label="Fechar legenda"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden>
@@ -76,15 +80,29 @@ export function MapLegend() {
         </div>
       )}
 
-      {!open && (
+      <div className="pointer-events-auto flex flex-row flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          className="rounded-full border border-brand-line bg-white px-3 py-1.5 text-xs font-semibold text-brand-ink shadow-card transition-colors hover:bg-brand-line-soft"
+          onClick={() => setOpen((v) => !v)}
+          aria-pressed={open}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold shadow-card transition-colors ${
+            open
+              ? 'border-brand-ink-soft bg-brand-ink text-white hover:bg-brand-ink-soft'
+              : 'border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line-soft'
+          }`}
         >
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
+            <path
+              d="M4 6h16M4 12h16M4 18h10"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
           Legenda
         </button>
-      )}
+        {extra}
+      </div>
     </div>
   );
 }

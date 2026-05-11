@@ -60,3 +60,12 @@ src/
 ## Documentação modular
 
 - [src/contexts/CLAUDE.md](src/contexts/CLAUDE.md)
+- [src/components/cadastros/CLAUDE.md](src/components/cadastros/CLAUDE.md)
+
+## UI primitivos
+
+Em `src/components/ui/` ficam os primitivos: `Button`, `Input`, `Card`, `Modal`. `Modal` foi adicionado junto com a tela de Cadastro de Locais — overlay + portal, fecha em Esc/click no overlay, props `open`, `onClose`, `title`, `children`, `size` (`md`/`lg`/`xl`), `footer`.
+
+## Google Maps libraries
+
+Todas as telas que carregam o mapa devem importar `MAP_LIBRARIES` de [src/services/googleMaps.ts](src/services/googleMaps.ts). O `useJsApiLoader` exige que `libraries` seja a **mesma referência** entre telas — declarar inline por tela gera warning e pode forçar recarga do script.

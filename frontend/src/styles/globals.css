@@ -6,10 +6,11 @@
   /* Paleta 60-30-10 */
   --color-surface: #ffffff;     /* 60% fundos, cards */
   --color-ink: #1f2937;         /* 30% sidebar/topbar/texto forte */
-  --color-ink-soft: #000000;
-  --color-ink-muted: #000000;
+  --color-ink-soft: #374151;
+  --color-ink-muted: #9ca3af;
   --color-line: #e3e7e8;
   --color-line-soft: #f1f3f4;
+  --color-line-strong: #d4dadc;
   --color-accent: #b4e7ff;      /* 10% CTA, ativo, destaque */
   --color-accent-hover: #8fd5f5;
   --color-accent-soft: #e7f6fd;

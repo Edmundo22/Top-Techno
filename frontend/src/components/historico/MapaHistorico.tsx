@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { MAP_LIBRARIES } from '../../services/googleMaps';
 import type {
   LocalHistorico,
   Posicao,
@@ -7,6 +8,7 @@ import type {
 } from '../../services/historicoApi';
 import { formatBRDateTimeFull } from '../../utils/datetime';
 import { logError, logSuccess } from '../../utils/logger';
+import { MapPoiToggle } from '../ui/MapPoiToggle';
 import { MapLegend } from './MapLegend';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
@@ -21,8 +23,6 @@ const DIST_ROTA_THRESHOLD = 50;
 
 const CAR_PATH =
   'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z';
-
-const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
 const containerStyle = {
   width: '100%',
@@ -96,6 +96,7 @@ export function MapaHistorico({
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [showPois, setShowPois] = useState(true);
 
   const rotaPolylinesRef = useRef<google.maps.Polyline[]>([]);
   const posMarkersRef = useRef<google.maps.Marker[]>([]);
@@ -291,10 +292,10 @@ export function MapaHistorico({
         radius: local.raio ?? 0,
         map: null,
         fillColor: '#000000',
-        fillOpacity: 0.12,
+        fillOpacity: 0.75,
         strokeColor: '#000000',
-        strokeOpacity: 0.6,
-        strokeWeight: 1,
+        strokeOpacity: 0.85,
+        strokeWeight: 1.5,
         clickable: false,
       });
       localCirclesRef.current.push(circle);
@@ -417,7 +418,11 @@ export function MapaHistorico({
         onLoad={onLoad}
         onUnmount={onUnmount}
       />
-      <MapLegend />
+      <MapLegend
+        extra={
+          <MapPoiToggle map={map} show={showPois} onToggle={() => setShowPois((v) => !v)} />
+        }
+      />
     </div>
   );
 }

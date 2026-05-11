@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { MAP_LIBRARIES } from '../../services/googleMaps';
 import type { LocalDia, Rota, Veiculo } from '../../services/monitoramentoApi';
+import { MapPoiToggle } from '../ui/MapPoiToggle';
 import { formatBRDateTime } from '../../utils/datetime';
 import { logError, logSuccess } from '../../utils/logger';
 import { LocalMarker } from './LocalMarker';
@@ -19,8 +21,6 @@ const COLOR_VEIC_SEM_VIAGEM = '#000000';
 
 const pickVeiculoColor = (v: Veiculo): string =>
   (v.idViagem ?? 0) > 0 ? COLOR_VEIC_COM_VIAGEM : COLOR_VEIC_SEM_VIAGEM;
-
-const MAP_LIBRARIES: ('geometry')[] = ['geometry'];
 
 const containerStyle = {
   width: '100%',
@@ -55,6 +55,7 @@ export function MapaMonitoramento({
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [showPois, setShowPois] = useState(true);
 
   const rotaPolylinesRef = useRef<google.maps.Polyline[]>([]);
   const rotaMarkersRef = useRef<google.maps.Marker[]>([]);
@@ -253,7 +254,11 @@ export function MapaMonitoramento({
           />
         ))}
       </GoogleMap>
-      <MapLegend />
+      <MapLegend
+        extra={
+          <MapPoiToggle map={map} show={showPois} onToggle={() => setShowPois((v) => !v)} />
+        }
+      />
     </div>
   );
 }

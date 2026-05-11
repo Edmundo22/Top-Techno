@@ -20,7 +20,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <input
         ref={ref}
         id={inputId}
-        className={`h-10 rounded-lg border border-brand-line bg-white px-3 text-sm text-brand-ink outline-none transition-colors placeholder:text-brand-ink-muted focus:border-brand-accent ${className}`}
+        className={`h-10 rounded-lg border border-brand-line bg-white px-3 text-sm text-brand-ink outline-none transition-colors placeholder:text-brand-ink-muted/70 focus:border-brand-accent ${className}`}
         {...rest}
       />
       {error && <span className="text-xs text-red-600">{error}</span>}

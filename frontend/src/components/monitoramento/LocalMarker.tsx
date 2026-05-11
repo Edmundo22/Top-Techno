@@ -68,10 +68,10 @@ export function LocalMarker({ data }: LocalMarkerProps) {
           radius={data.raio}
           options={{
             fillColor: color,
-            fillOpacity: 0.12,
+            fillOpacity: 0.75,
             strokeColor: color,
-            strokeOpacity: 0.6,
-            strokeWeight: 1,
+            strokeOpacity: 0.85,
+            strokeWeight: 1.5,
             clickable: false,
           }}
         />

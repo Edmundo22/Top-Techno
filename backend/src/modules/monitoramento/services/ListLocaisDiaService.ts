@@ -1,5 +1,6 @@
 import { toIsoLocal } from '../../../shared/utils/datetime';
-import { LocalRow, MonitoramentoRepository } from '../repositories/MonitoramentoRepository';
+import { normalizePontoParada } from '../../../shared/utils/normalizePontoParada';
+import { MonitoramentoRepository } from '../repositories/MonitoramentoRepository';
 
 export interface LocalDTO {
   idViagemEntrada: number;
@@ -15,13 +16,6 @@ export interface LocalDTO {
   dtSaiPrevista: string | null;
   dtEntReal: string | null;
   dtSaiReal: string | null;
-}
-
-function normalizePontoParada(value: LocalRow['PONTO_PARADA']): string | null {
-  if (value == null) return null;
-  if (typeof value === 'boolean') return value ? 'SIM' : 'NÃO';
-  if (typeof value === 'number') return value === 0 ? 'NÃO' : 'SIM';
-  return String(value).trim() || null;
 }
 
 export class ListLocaisDiaService {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authRoutes } from '../../modules/auth/routes/auth.routes';
 import { historicoRoutes } from '../../modules/historico/routes/historico.routes';
+import { localRoutes } from '../../modules/locais/routes/local.routes';
 import { monitoramentoRoutes } from '../../modules/monitoramento/routes/monitoramento.routes';
 import { usuarioRoutes } from '../../modules/usuarios/routes/usuario.routes';
 
@@ -12,5 +13,6 @@ router.use('/auth', authRoutes);
 router.use('/usuarios', usuarioRoutes);
 router.use('/monitoramento', monitoramentoRoutes);
 router.use('/historico', historicoRoutes);
+router.use('/locais', localRoutes);
 
 export { router };

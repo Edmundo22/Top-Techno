@@ -10,9 +10,9 @@ const base =
 
 const styles: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:
-    'bg-brand-accent text-brand-ink hover:bg-brand-accent-hover focus-visible:outline-brand-accent',
+    'bg-brand-accent text-brand-ink border border-transparent hover:bg-brand-accent-hover hover:shadow-card focus-visible:outline-brand-accent',
   ghost:
-    'bg-transparent text-brand-ink hover:bg-brand-line-soft',
+    'bg-transparent text-brand-ink-soft border border-transparent hover:border-brand-line hover:bg-brand-line-soft hover:text-brand-ink',
 };
 
 export function Button({ variant = 'primary', className = '', children, ...rest }: ButtonProps) {

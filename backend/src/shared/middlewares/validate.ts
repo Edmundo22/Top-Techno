@@ -16,3 +16,11 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
     next();
   };
 }
+
+export function validateParams<T>(schema: ZodSchema<T>) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    const parsed = schema.parse(req.params);
+    (req as unknown as { validatedParams: T }).validatedParams = parsed;
+    next();
+  };
+}
