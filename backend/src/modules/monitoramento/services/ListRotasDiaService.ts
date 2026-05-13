@@ -10,6 +10,9 @@ export interface RotaDTO {
   dtIniViagem: string | null;
   dtFimViagem: string | null;
   polyline: string;
+  idFt: number | null;
+  numeroLinha: string | null;
+  numeroFt: string | null;
 }
 
 export class ListRotasDiaService {
@@ -28,6 +31,9 @@ export class ListRotasDiaService {
         dtIniViagem: toIsoLocal(r.DT_INI_VIAGEM),
         dtFimViagem: toIsoLocal(r.DT_FIM_VIAGEM),
         polyline: r.POLYLINE as string,
+        idFt: r.ID_FT,
+        numeroLinha: r.NUMERO_LINHA,
+        numeroFt: r.NUMERO_FT,
       }));
   }
 }

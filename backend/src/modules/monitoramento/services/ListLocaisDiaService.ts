@@ -7,6 +7,7 @@ export interface LocalDTO {
   idViagem: number;
   ordem: number | null;
   idLocal: number;
+  codigoPonto: string | null;
   endereco: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -28,6 +29,7 @@ export class ListLocaisDiaService {
       idViagem: r.ID_VIAGEM,
       ordem: r.ORDEM,
       idLocal: r.ID_LOCAL,
+      codigoPonto: r.CODIGO_PONTO,
       endereco: r.ENDERECO,
       latitude: r.LATITUDE,
       longitude: r.LONGITUDE,

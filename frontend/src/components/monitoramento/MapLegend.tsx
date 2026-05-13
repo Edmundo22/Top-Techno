@@ -1,21 +1,35 @@
 import { useState, type ReactNode } from 'react';
+import { CarLegendIcon, LocalPinLegendIcon } from '../ui/icons';
+
+type LegendKind = 'veiculo' | 'local';
 
 interface LegendItem {
+  kind: LegendKind;
   color: string;
   label: string;
 }
 
 const VEICULOS: LegendItem[] = [
-  { color: '#16a34a', label: 'Veículo com viagem do dia' },
-  { color: '#000000', label: 'Veículo sem viagem' },
+  { kind: 'veiculo', color: '#16a34a', label: 'Veículo com rota hoje' },
+  { kind: 'veiculo', color: '#000000', label: 'Veículo sem rota' },
 ];
 
 const LOCAIS: LegendItem[] = [
-  { color: '#000000', label: 'Sem entrada nem saída' },
-  { color: '#7c3aed', label: 'No local, dentro do horário' },
-  { color: '#1d4ed8', label: 'Chegou/saiu no prazo' },
-  { color: '#dc2626', label: 'Atrasado (entrada ou saída)' },
+  { kind: 'local', color: '#000000', label: 'Sem entrada nem saída' },
+  { kind: 'local', color: '#7c3aed', label: 'No local, dentro do horário' },
+  { kind: 'local', color: '#1d4ed8', label: 'Chegou/saiu no prazo' },
+  { kind: 'local', color: '#dc2626', label: 'Atrasado (entrada ou saída)' },
 ];
+
+function LegendRow({ item }: { item: LegendItem }) {
+  const Icon = item.kind === 'veiculo' ? CarLegendIcon : LocalPinLegendIcon;
+  return (
+    <li className="flex items-center gap-2 text-xs text-brand-ink">
+      <Icon color={item.color} className="h-4 w-4 shrink-0 drop-shadow-sm" />
+      <span>{item.label}</span>
+    </li>
+  );
+}
 
 function LegendGroup({ title, items }: { title: string; items: LegendItem[] }) {
   return (
@@ -25,17 +39,7 @@ function LegendGroup({ title, items }: { title: string; items: LegendItem[] }) {
       </div>
       <ul className="flex flex-col gap-1">
         {items.map((item) => (
-          <li
-            key={item.label}
-            className="flex items-center gap-2 text-xs text-brand-ink"
-          >
-            <span
-              className="inline-block h-3 w-3 shrink-0 rounded-full border border-white shadow"
-              style={{ backgroundColor: item.color }}
-              aria-hidden
-            />
-            <span>{item.label}</span>
-          </li>
+          <LegendRow key={item.label} item={item} />
         ))}
       </ul>
     </div>

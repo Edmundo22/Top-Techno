@@ -29,7 +29,7 @@ export function RotasTable({
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b border-brand-line px-5 py-3">
-        <h2 className="text-sm font-semibold text-brand-ink">Rotas do dia</h2>
+        <h2 className="text-sm font-semibold text-brand-ink">Todas as rotas de hoje</h2>
         <span className="text-xs text-brand-ink-muted">
           {loading ? 'atualizando…' : `${rotas.length} viagem(ns)`}
         </span>
@@ -46,6 +46,7 @@ export function RotasTable({
           <table className="min-w-full text-left text-xs">
             <thead className="bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted">
               <tr>
+                <th className="px-5 py-2 font-semibold">Linha</th>
                 <th className="px-5 py-2 font-semibold">Status viagem</th>
                 <th className="px-5 py-2 font-semibold">Placa</th>
                 <th className="px-5 py-2 font-semibold">Data início</th>
@@ -66,6 +67,7 @@ export function RotasTable({
                         : 'hover:bg-brand-line-soft/50'
                     }`}
                   >
+                    <td className="px-5 py-2 font-semibold tabular-nums">{r.numeroLinha ?? '—'}</td>
                     <td className="px-5 py-2">{r.statusLabel ?? '—'}</td>
                     <td className="px-5 py-2 font-semibold">{r.placa ?? '—'}</td>
                     <td className="px-5 py-2">{formatBRDateTime(r.dtIniViagem)}</td>

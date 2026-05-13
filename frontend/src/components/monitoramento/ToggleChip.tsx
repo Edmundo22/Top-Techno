@@ -1,18 +1,21 @@
+import type { ReactNode } from 'react';
+
 interface ToggleChipProps {
   active: boolean;
   onClick: () => void;
   label: string;
   count?: number;
   disabled?: boolean;
+  icon?: ReactNode;
 }
 
-export function ToggleChip({ active, onClick, label, count, disabled }: ToggleChipProps) {
+export function ToggleChip({ active, onClick, label, count, disabled, icon }: ToggleChipProps) {
   const base =
     'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60';
   const on =
     'border-brand-accent bg-brand-accent text-brand-ink hover:bg-brand-accent-hover';
   const off =
-    'border-brand-line bg-brand-surface text-brand-ink hover:bg-brand-line-soft';
+    'border-brand-line bg-brand-surface text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line-soft';
   return (
     <button
       type="button"
@@ -21,10 +24,16 @@ export function ToggleChip({ active, onClick, label, count, disabled }: ToggleCh
       aria-pressed={active}
       className={`${base} ${active ? on : off}`}
     >
-      <span
-        className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-brand-ink' : 'bg-brand-line'}`}
-        aria-hidden
-      />
+      {icon ? (
+        <span className="inline-flex h-4 w-4 items-center justify-center" aria-hidden>
+          {icon}
+        </span>
+      ) : (
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${active ? 'bg-brand-ink' : 'bg-brand-line'}`}
+          aria-hidden
+        />
+      )}
       {label}
       {typeof count === 'number' && (
         <span

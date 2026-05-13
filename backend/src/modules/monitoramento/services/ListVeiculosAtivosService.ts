@@ -11,6 +11,7 @@ export interface VeiculoDTO {
   velocidade: number | null;
   idViagem: number | null;
   idViagemStatus: number | null;
+  temRota: boolean;
 }
 
 function normalizeIgnicao(value: VeiculoRow['IGNICAO']): string | null {
@@ -18,6 +19,12 @@ function normalizeIgnicao(value: VeiculoRow['IGNICAO']): string | null {
   if (typeof value === 'boolean') return value ? 'LIGADA' : 'DESLIGADA';
   if (typeof value === 'number') return value === 0 ? 'DESLIGADA' : 'LIGADA';
   return String(value).trim() || null;
+}
+
+function normalizeTemRota(value: VeiculoRow['TEM_ROTA']): boolean {
+  if (value == null) return false;
+  if (typeof value === 'boolean') return value;
+  return Number(value) === 1;
 }
 
 export class ListVeiculosAtivosService {
@@ -35,6 +42,7 @@ export class ListVeiculosAtivosService {
       velocidade: r.VELOCIDADE,
       idViagem: r.ID_VIAGEM,
       idViagemStatus: r.ID_VIAGEM_STATUS,
+      temRota: normalizeTemRota(r.TEM_ROTA),
     }));
   }
 }

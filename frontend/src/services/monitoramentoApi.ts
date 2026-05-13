@@ -8,6 +8,7 @@ export interface Veiculo {
   velocidade: number | null;
   idViagem: number | null;
   idViagemStatus: number | null;
+  temRota: boolean;
 }
 
 export interface Rota {
@@ -19,6 +20,9 @@ export interface Rota {
   dtIniViagem: string | null;
   dtFimViagem: string | null;
   polyline: string;
+  idFt: number | null;
+  numeroLinha: string | null;
+  numeroFt: string | null;
 }
 
 export interface LocalDia {
@@ -26,6 +30,7 @@ export interface LocalDia {
   idViagem: number;
   ordem: number | null;
   idLocal: number;
+  codigoPonto: string | null;
   endereco: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -50,13 +55,13 @@ export interface LocaisResponse {
 }
 
 export interface ViagemEntrada {
-  dt: string | null;
+  placa: string | null;
   local: string | null;
   entPrev: string | null;
   entReal: string | null;
   saiPrev: string | null;
   saiReal: string | null;
-  tLocalMin: number | null;
+  tDentroMin: number | null;
   ordem: number | null;
   dtEntPrevistaIso: string | null;
   dtEntRealIso: string | null;

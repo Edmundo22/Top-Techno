@@ -1,10 +1,48 @@
 import { useState, type ReactNode } from 'react';
+import { CarLegendIcon, LocalPinLegendIcon } from '../ui/icons';
 
-const ITEMS: { color: string; label: string }[] = [
-  { color: '#16a34a', label: 'Em rota (DIST_ROTA < 50 m)' },
-  { color: '#dc2626', label: 'Fora da rota (DIST_ROTA ≥ 50 m)' },
-  { color: '#7c3aed', label: 'Ignição desligada (prioridade)' },
+type LegendKind = 'veiculo' | 'local';
+
+interface LegendItem {
+  kind: LegendKind;
+  color: string;
+  label: string;
+}
+
+const POSICOES: LegendItem[] = [
+  { kind: 'veiculo', color: '#16a34a', label: 'Em rota (DIST_ROTA < 50 m)' },
+  { kind: 'veiculo', color: '#dc2626', label: 'Fora da rota (DIST_ROTA ≥ 50 m)' },
+  { kind: 'veiculo', color: '#7c3aed', label: 'Ignição desligada (prioridade)' },
 ];
+
+const LOCAIS: LegendItem[] = [
+  { kind: 'local', color: '#000000', label: 'Local de parada do histórico' },
+];
+
+function LegendRow({ item }: { item: LegendItem }) {
+  const Icon = item.kind === 'veiculo' ? CarLegendIcon : LocalPinLegendIcon;
+  return (
+    <li className="flex items-center gap-2 text-xs text-brand-ink">
+      <Icon color={item.color} className="h-4 w-4 shrink-0 drop-shadow-sm" />
+      <span>{item.label}</span>
+    </li>
+  );
+}
+
+function LegendGroup({ title, items }: { title: string; items: LegendItem[] }) {
+  return (
+    <div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-ink-muted">
+        {title}
+      </div>
+      <ul className="flex flex-col gap-1">
+        {items.map((item) => (
+          <LegendRow key={item.label} item={item} />
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 interface MapLegendProps {
   extra?: ReactNode;
@@ -19,7 +57,7 @@ export function MapLegend({ extra }: MapLegendProps) {
         <div className="pointer-events-auto rounded-card border border-brand-line bg-white p-3 shadow-card">
           <div className="mb-2 flex items-center justify-between gap-6">
             <span className="text-xs font-semibold uppercase tracking-wider text-brand-ink">
-              Legenda — ícones de posição
+              Legenda
             </span>
             <button
               type="button"
@@ -37,18 +75,10 @@ export function MapLegend({ extra }: MapLegendProps) {
               </svg>
             </button>
           </div>
-          <ul className="flex flex-col gap-1.5">
-            {ITEMS.map((item) => (
-              <li key={item.label} className="flex items-center gap-2 text-xs text-brand-ink">
-                <span
-                  className="inline-block h-3 w-3 shrink-0 rounded-full border border-white shadow"
-                  style={{ backgroundColor: item.color }}
-                  aria-hidden
-                />
-                <span>{item.label}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-3">
+            <LegendGroup title="Posições" items={POSICOES} />
+            <LegendGroup title="Locais" items={LOCAIS} />
+          </div>
         </div>
       )}
 

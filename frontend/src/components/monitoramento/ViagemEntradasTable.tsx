@@ -19,7 +19,7 @@ function cellBg(realIso: string | null, prevIso: string | null): string {
   return realIso > prevIso ? LATE_BG : ON_TIME_BG;
 }
 
-function formatTLocal(min: number | null): string {
+function formatTDentro(min: number | null): string {
   if (min == null) return '—';
   return `${min} min`;
 }
@@ -55,13 +55,12 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
             <thead className="bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted">
               <tr>
                 <th className="px-5 py-2 font-semibold">Ordem</th>
-                <th className="px-5 py-2 font-semibold">Data</th>
                 <th className="px-5 py-2 font-semibold">Local</th>
                 <th className="px-5 py-2 font-semibold">Ent. prev.</th>
                 <th className="px-5 py-2 font-semibold">Ent. real</th>
                 <th className="px-5 py-2 font-semibold">Saí. prev.</th>
                 <th className="px-5 py-2 font-semibold">Saí. real</th>
-                <th className="px-5 py-2 font-semibold">T. local</th>
+                <th className="px-5 py-2 font-semibold">T. dentro</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-line">
@@ -74,7 +73,6 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
                     className="text-brand-ink"
                   >
                     <td className="px-5 py-2 tabular-nums">{e.ordem ?? '—'}</td>
-                    <td className="px-5 py-2 tabular-nums">{e.dt ?? '—'}</td>
                     <td className="px-5 py-2">{e.local ?? '—'}</td>
                     <td className="px-5 py-2 tabular-nums">{e.entPrev ?? '—'}</td>
                     <td className={`px-5 py-2 tabular-nums ${entBg}`}>
@@ -85,7 +83,7 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
                       {e.saiReal ?? '—'}
                     </td>
                     <td className="px-5 py-2 tabular-nums">
-                      {formatTLocal(e.tLocalMin)}
+                      {formatTDentro(e.tDentroMin)}
                     </td>
                   </tr>
                 );

@@ -16,11 +16,23 @@ const ROUTE_COLOR_SELECTED = '#dc2626';
 const ROUTE_COLOR_DIMMED = '#d1d5db';
 const ENDPOINT_COLOR_DIMMED = '#9ca3af';
 
-const COLOR_VEIC_COM_VIAGEM = '#16a34a';
-const COLOR_VEIC_SEM_VIAGEM = '#000000';
+const COLOR_VEIC_COM_ROTA = '#16a34a';
+const COLOR_VEIC_SEM_ROTA = '#000000';
 
-const pickVeiculoColor = (v: Veiculo): string =>
-  (v.idViagem ?? 0) > 0 ? COLOR_VEIC_COM_VIAGEM : COLOR_VEIC_SEM_VIAGEM;
+// Mesma resiliência do hasRota da página: prefere o sinal `temRota` do backend,
+// e cai pra `idViagem != null` se ausente, para não pintar tudo de preto quando
+// o backend ainda não foi rebuildado.
+const pickVeiculoColor = (v: Veiculo): string => {
+  if (v.temRota === true) return COLOR_VEIC_COM_ROTA;
+  if (v.temRota === false) return COLOR_VEIC_SEM_ROTA;
+  return (v.idViagem ?? 0) > 0 ? COLOR_VEIC_COM_ROTA : COLOR_VEIC_SEM_ROTA;
+};
+
+// Intervalo da pulsação da polyline selecionada — alterna strokeOpacity
+// entre HI e LO para chamar atenção sem distrair.
+const PULSE_INTERVAL_MS = 600;
+const PULSE_OPACITY_HI = 1;
+const PULSE_OPACITY_LO = 0.4;
 
 const containerStyle = {
   width: '100%',
@@ -35,6 +47,10 @@ interface MapaMonitoramentoProps {
   showLocais: boolean;
   selectedViagemId: number | null;
   onSelectViagem: (idViagem: number | null) => void;
+  /** Reporta quantos markers de local estão dentro do viewport atual. Dispara
+   *  após cada `idle` do mapa e quando `locais` muda. Usado pela página para
+   *  gate-ar o polling do endpoint `/monitoramento/locais`. */
+  onVisibleLocaisChange?: (count: number) => void;
 }
 
 export function MapaMonitoramento({
@@ -45,6 +61,7 @@ export function MapaMonitoramento({
   showLocais,
   selectedViagemId,
   onSelectViagem,
+  onVisibleLocaisChange,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -60,6 +77,7 @@ export function MapaMonitoramento({
   const rotaPolylinesRef = useRef<google.maps.Polyline[]>([]);
   const rotaMarkersRef = useRef<google.maps.Marker[]>([]);
   const rotaInfoWindowsRef = useRef<google.maps.InfoWindow[]>([]);
+  const selectedPolylineRef = useRef<google.maps.Polyline | null>(null);
 
   const clearRotas = useCallback(() => {
     rotaInfoWindowsRef.current.forEach((iw) => iw.close());
@@ -68,6 +86,7 @@ export function MapaMonitoramento({
     rotaInfoWindowsRef.current = [];
     rotaMarkersRef.current = [];
     rotaPolylinesRef.current = [];
+    selectedPolylineRef.current = null;
   }, []);
 
   const mapOptions: google.maps.MapOptions = {
@@ -131,7 +150,7 @@ export function MapaMonitoramento({
         path,
         geodesic: false,
         strokeColor: polylineColor,
-        strokeOpacity: isSelected ? 1 : 0.85,
+        strokeOpacity: isSelected ? PULSE_OPACITY_HI : 0.85,
         strokeWeight: isSelected ? 6 : 4,
         clickable: true,
         zIndex: isSelected ? 8 : isDimmed ? 3 : 5,
@@ -139,6 +158,7 @@ export function MapaMonitoramento({
       });
       polyline.addListener('click', () => onSelectViagem(rota.idViagem));
       rotaPolylinesRef.current.push(polyline);
+      if (isSelected) selectedPolylineRef.current = polyline;
 
       const endpointIcon: google.maps.Symbol = {
         path: google.maps.SymbolPath.CIRCLE,
@@ -205,6 +225,50 @@ export function MapaMonitoramento({
       clearRotas();
     };
   }, [map, showRotas, rotas, selectedViagemId, onSelectViagem, clearRotas]);
+
+  // Reporta a quantidade de markers de local dentro do viewport.
+  // Recalcula no `idle` (Maps dispara só uma vez quando o pan/zoom termina —
+  // já vem debounced). Também recalcula quando `locais` muda.
+  useEffect(() => {
+    if (!map || !onVisibleLocaisChange) return;
+    const compute = () => {
+      const bounds = map.getBounds();
+      if (!bounds) {
+        onVisibleLocaisChange(0);
+        return;
+      }
+      let visible = 0;
+      for (const l of locais) {
+        if (l.latitude == null || l.longitude == null) continue;
+        if (bounds.contains({ lat: l.latitude, lng: l.longitude })) visible++;
+      }
+      onVisibleLocaisChange(visible);
+    };
+    compute();
+    const listener = map.addListener('idle', compute);
+    return () => google.maps.event.removeListener(listener);
+  }, [map, locais, onVisibleLocaisChange]);
+
+  // Pulsa a polyline selecionada alternando strokeOpacity.
+  // O efeito depende de selectedViagemId e da execução prévia do efeito acima
+  // (que popula selectedPolylineRef). Sem polyline atribuída, sai cedo.
+  useEffect(() => {
+    if (selectedViagemId == null) return;
+    const polyline = selectedPolylineRef.current;
+    if (!polyline) return;
+    let hi = true;
+    const id = window.setInterval(() => {
+      polyline.setOptions({
+        strokeOpacity: hi ? PULSE_OPACITY_LO : PULSE_OPACITY_HI,
+      });
+      hi = !hi;
+    }, PULSE_INTERVAL_MS);
+    return () => {
+      window.clearInterval(id);
+      // Garante que ao desselecionar/destruir a polyline volte para 100%.
+      polyline.setOptions({ strokeOpacity: PULSE_OPACITY_HI });
+    };
+  }, [selectedViagemId, rotas, showRotas]);
 
   if (!apiKey) {
     return (

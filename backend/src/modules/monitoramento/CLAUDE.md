@@ -6,10 +6,10 @@ Módulo responsável pelos dados da tela de monitoramento ao vivo: posição atu
 
 | Método | Path                                      | Descrição                                                                                          |
 |--------|-------------------------------------------|----------------------------------------------------------------------------------------------------|
-| GET    | `/monitoramento/veiculos`                 | Veículos de `TB_VEICULO` cuja `DT_ULT_POSICAO` é de hoje. `ID_VIAGEM` = subquery top 1 da viagem do dia (ou `null`). |
-| GET    | `/monitoramento/rotas`                    | Viagens de hoje + `POLYLINE` da ficha (`FT_CABECALHO`) + status + placa + datas início/fim.       |
-| GET    | `/monitoramento/locais`                   | Locais referenciados por `TB_VIAGEM_ENTRADA` das viagens de hoje, com previstas e reais de entrada/saída. |
-| GET    | `/monitoramento/viagem-entradas?idViagem=X` | Paradas (`TB_VIAGEM_ENTRADA` ⨝ `TB_LOCAL`) de uma viagem. Retorna data, local, entradas/saídas previstas e reais, tempo no local. Validado com Zod. |
+| GET    | `/monitoramento/veiculos`                 | Veículos de `TB_VEICULO` cuja `DT_ULT_POSICAO` é de hoje. `idViagem` = viagem do dia (ou `null`). `temRota` = `true` quando a viagem do dia tem `POLYLINE` em `FT_CABECALHO`. |
+| GET    | `/monitoramento/rotas`                    | Viagens de hoje + `POLYLINE` da ficha + `numeroLinha`, `numeroFt`, `idFt` + status + placa + datas início/fim. |
+| GET    | `/monitoramento/locais`                   | Locais (`TB_VIAGEM_ENTRADA` ⨝ `TB_LOCAL`) das viagens de hoje, incluindo `codigoPonto`, previstas e reais de entrada/saída. |
+| GET    | `/monitoramento/viagem-entradas?idViagem=X` | Paradas (`TB_VIAGEM_ENTRADA` ⨝ `TB_LOCAL` ⨝ `TB_VEICULO`) de uma viagem. Retorna placa, local, horários previstos/reais (`HH:mm:ss`), ordem e `tDentroMin` (DATEDIFF MINUTE entre real-ent e real-sai). Validado com Zod. |
 
 Todas retornam `{ data: { ... } }` via `ok(res, ...)`.
 
@@ -17,14 +17,11 @@ Todas retornam `{ data: { ... } }` via `ok(res, ...)`.
 
 O corte "dia atual" depende da rota:
 
-- **Veículos**: `CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)` — quem reportou posição hoje aparece no mapa, independe de ter viagem cadastrada. O `ID_VIAGEM` retornado vem de uma subquery `SELECT TOP(1) v2.ID_VIAGEM FROM TB_VIAGEM v2 WHERE v2.ID_VEICULO = veic.ID_VEICULO AND CAST(v2.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)` — ou seja, só traz viagem se ela existe **hoje**, senão `null`. O frontend usa esse campo pra distinguir veículo "com viagem" (verde) de "sem viagem" (preto).
+- **Veículos**: `CAST(v.DT_ULT_POSICAO AS DATE) = CAST(GETDATE() AS DATE)` — quem reportou posição hoje aparece no mapa, independe de ter viagem cadastrada. A query usa `OUTER APPLY` em `TB_VIAGEM` (do dia) com `LEFT JOIN FT_CABECALHO` para devolver, além de `ID_VIAGEM`, o campo `TEM_ROTA` (1 quando a viagem existe **e** a ficha referenciada tem `POLYLINE` não-vazia, 0 caso contrário). O frontend usa `temRota` para decidir a cor do veículo: verde (`#16a34a`) por padrão, preto (`#000000`) quando sem rota. Por padrão, **só os com rota aparecem**; os sem rota só com o toggle ligado.
 - **Rotas / Locais**: `CAST(vi.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)` — só viagens planejadas/andando hoje.
 - **Viagem-entradas**: filtra por `ent.ID_VIAGEM = @idViagem` (parâmetro). Sem corte de data — a viagem em si já garante que é do dia, já que o frontend só chama com `ID_VIAGEM` vindo de `/veiculos`.
 
-Ambos usam o relógio do SQL Server.
-
-- Se o SQL Server estiver em fuso Brasil (UTC-3), funciona direto.
-- Se estiver em UTC, trocar `GETDATE()` por `CAST(SWITCHOFFSET(SYSDATETIMEOFFSET(), '-03:00') AS DATE)` — caso apareça o sintoma (veículos/viagens de "ontem" às 21h desaparecendo cedo), é esse o ponto de edição.
+"Hoje" é computado no **Node** com `Intl.DateTimeFormat({ timeZone: 'America/Sao_Paulo' })` e injetado como `@today` na query (`shared/utils/datetime.ts → todayInBrazil`). Assim o filtro é independente do fuso do SQL Server (cloud servers frequentemente rodam em UTC, o que fazia veículos de "hoje" sumirem após 21h Brasília quando o dia UTC virava).
 
 ## Formato das datas na resposta
 
