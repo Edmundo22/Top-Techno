@@ -12,7 +12,7 @@ export function LinhasFilterCard({
   onToggleLinha,
 }: LinhasFilterCardProps) {
   return (
-    <section className="flex min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card">
+    <section className="flex h-full min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card">
       <header className="flex items-center justify-between gap-2 px-1 pt-0.5">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-ink-soft">
           <RouteIcon className="h-3.5 w-3.5" />
