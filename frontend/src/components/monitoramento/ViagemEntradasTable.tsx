@@ -33,8 +33,8 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
   const entradas = poll.data?.entradas ?? [];
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="flex items-center justify-between border-b border-brand-line px-5 py-3">
+    <Card className="flex max-h-[360px] flex-col overflow-hidden p-0">
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-brand-line px-5 py-3">
         <h2 className="text-sm font-semibold text-brand-ink">
           Entradas — <span className="font-bold">{placa}</span>
         </h2>
@@ -50,9 +50,9 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
           Sem paradas cadastradas para essa viagem.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="min-h-0 flex-1 overflow-auto">
           <table className="min-w-full text-left text-xs">
-            <thead className="bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted">
+            <thead className="sticky top-0 z-10 bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted shadow-[0_1px_0_0_var(--color-line)]">
               <tr>
                 <th className="px-5 py-2 font-semibold">Ordem</th>
                 <th className="px-5 py-2 font-semibold">Local</th>
