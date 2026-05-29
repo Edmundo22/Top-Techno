@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Circle, InfoWindow, Marker } from '@react-google-maps/api';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { InfoWindow, Marker, useGoogleMap } from '@react-google-maps/api';
 import type { LocalDia } from '../../services/monitoramentoApi';
 import { formatBRDateTimeFull } from '../../utils/datetime';
 
@@ -31,17 +31,54 @@ function pickLocalColor(data: LocalDia): string {
 }
 
 export function LocalMarker({ data }: LocalMarkerProps) {
+  const map = useGoogleMap();
   const [openInfo, setOpenInfo] = useState(false);
   const [showRaio, setShowRaio] = useState(false);
+  const circleRef = useRef<google.maps.Circle | null>(null);
 
   const position = useMemo(() => {
     if (data.latitude == null || data.longitude == null) return null;
     return { lat: data.latitude, lng: data.longitude };
   }, [data.latitude, data.longitude]);
 
-  if (!position) return null;
-
   const color = pickLocalColor(data);
+
+  // Renderiza o círculo do raio de forma imperativa: o cleanup com `setMap(null)`
+  // é garantido em todo desmonte/desligamento. O `<Circle>` declarativo do
+  // @react-google-maps/api às vezes deixava um residual visível quando o
+  // usuário alternava "Mostrar/Ocultar raio" no InfoWindow.
+  useEffect(() => {
+    // Sempre remover qualquer círculo anterior antes de decidir se cria de novo.
+    if (circleRef.current) {
+      circleRef.current.setMap(null);
+      circleRef.current = null;
+    }
+
+    if (!showRaio || !map || !position || data.raio == null || data.raio <= 0) {
+      return;
+    }
+
+    circleRef.current = new google.maps.Circle({
+      center: position,
+      radius: data.raio,
+      fillColor: color,
+      fillOpacity: 0.75,
+      strokeColor: color,
+      strokeOpacity: 0.85,
+      strokeWeight: 1.5,
+      clickable: false,
+      map,
+    });
+
+    return () => {
+      if (circleRef.current) {
+        circleRef.current.setMap(null);
+        circleRef.current = null;
+      }
+    };
+  }, [showRaio, map, position, data.raio, color]);
+
+  if (!position) return null;
 
   const icon: google.maps.Symbol = {
     path: PIN_PATH,
@@ -61,21 +98,6 @@ export function LocalMarker({ data }: LocalMarkerProps) {
         onClick={() => setOpenInfo((v) => !v)}
         zIndex={10}
       />
-
-      {showRaio && data.raio != null && data.raio > 0 && (
-        <Circle
-          center={position}
-          radius={data.raio}
-          options={{
-            fillColor: color,
-            fillOpacity: 0.75,
-            strokeColor: color,
-            strokeOpacity: 0.85,
-            strokeWeight: 1.5,
-            clickable: false,
-          }}
-        />
-      )}
 
       {openInfo && (
         <InfoWindow
