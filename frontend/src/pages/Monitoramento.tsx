@@ -89,6 +89,14 @@ export function MonitoramentoPage() {
     setVisibleLocaisCount(count);
   }, []);
 
+  // Quando o mapa termina de carregar, força um refetch dos veículos para
+  // garantir que os markers verdes (com rota) montem com o contexto do mapa já
+  // pronto. Sem isso, a primeira leva de veículos pode chegar antes do
+  // <GoogleMap> dar onLoad e ficar invisível até o próximo poll de 15s.
+  const handleMapReady = useCallback(() => {
+    veiculosPoll.refetch();
+  }, [veiculosPoll.refetch]);
+
   const veiculos = useMemo(() => veiculosPoll.data?.veiculos ?? [], [veiculosPoll.data]);
   const rotas = useMemo(() => rotasPoll.data?.rotas ?? [], [rotasPoll.data]);
   const locais = useMemo(() => locaisPoll.data?.locais ?? [], [locaisPoll.data]);
@@ -313,7 +321,12 @@ export function MonitoramentoPage() {
               active={showSemRota}
               variant="slate"
               onToggle={() => setShowSemRota((v) => !v)}
-              title="Clique para exibir/ocultar veículos sem rota"
+              title={
+                hasSelection
+                  ? 'Indisponível enquanto houver placa ou linha selecionada'
+                  : 'Clique para exibir/ocultar veículos sem rota'
+              }
+              disabled={hasSelection}
             />
           </div>
 
@@ -356,6 +369,7 @@ export function MonitoramentoPage() {
               selectedViagemId={selectedViagemId}
               onSelectViagem={handleSelectViagem}
               onVisibleLocaisChange={handleVisibleLocaisChange}
+              onMapReady={handleMapReady}
             />
           </div>
         </section>

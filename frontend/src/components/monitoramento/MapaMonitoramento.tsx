@@ -51,6 +51,11 @@ interface MapaMonitoramentoProps {
    *  após cada `idle` do mapa e quando `locais` muda. Usado pela página para
    *  gate-ar o polling do endpoint `/monitoramento/locais`. */
   onVisibleLocaisChange?: (count: number) => void;
+  /** Chamado uma vez quando o `<GoogleMap>` termina de carregar. A página usa
+   *  isso para forçar um refetch dos veículos APÓS o mapa estar pronto — sem
+   *  isso, a primeira leva pode chegar antes do contexto do mapa estar montado
+   *  e os `<VeiculoMarker>` falham silenciosamente até o próximo poll. */
+  onMapReady?: () => void;
 }
 
 export function MapaMonitoramento({
@@ -62,6 +67,7 @@ export function MapaMonitoramento({
   selectedViagemId,
   onSelectViagem,
   onVisibleLocaisChange,
+  onMapReady,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -113,7 +119,8 @@ export function MapaMonitoramento({
   const onLoad = useCallback((m: google.maps.Map) => {
     setMap(m);
     logSuccess('GoogleMap carregado', { center: SAO_PAULO_CENTER, zoom: DEFAULT_ZOOM });
-  }, []);
+    onMapReady?.();
+  }, [onMapReady]);
 
   const onUnmount = useCallback(() => {
     setMap(null);

@@ -10,6 +10,7 @@ interface StatToggleCardProps {
   onToggle: () => void;
   variant?: ActiveVariant;
   title?: string;
+  disabled?: boolean;
 }
 
 const ACTIVE_VARIANTS: Record<ActiveVariant, string> = {
@@ -38,14 +39,16 @@ export function StatToggleCard({
   onToggle,
   variant = 'green',
   title,
+  disabled = false,
 }: StatToggleCardProps) {
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-pressed={active}
+      disabled={disabled}
       title={title}
-      className={`flex h-12 min-w-[200px] items-center gap-3 rounded-card border px-3 text-left shadow-card transition-colors ${
+      className={`flex h-12 min-w-[200px] items-center gap-3 rounded-card border px-3 text-left shadow-card transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-brand-line ${
         active
           ? ACTIVE_VARIANTS[variant]
           : 'border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line-soft'
