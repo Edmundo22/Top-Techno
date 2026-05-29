@@ -330,11 +330,14 @@ export function MonitoramentoPage() {
             />
           </div>
 
-          {/* Direita — toggles de camadas */}
+          {/* Direita — toggles de camadas. Ambos ficam desabilitados enquanto
+              houver placa/linha selecionada: o filtro lateral já força as
+              camadas correspondentes via `showRotasEffective` / `showLocaisEffective`. */}
           <div className="flex flex-col items-end gap-2">
             <ToggleChip
               active={showRotas}
               onClick={handleToggleRotas}
+              disabled={hasSelection}
               label="Todas as rotas de hoje"
               count={showRotas ? rotas.length : undefined}
               icon={<RouteIcon className="h-3.5 w-3.5" />}
@@ -342,6 +345,7 @@ export function MonitoramentoPage() {
             <ToggleChip
               active={showLocais}
               onClick={() => setShowLocais((v) => !v)}
+              disabled={hasSelection}
               label="Todos os locais de hoje"
               count={showLocais ? countLocaisUnicos(locais) : undefined}
               icon={<PinIcon className="h-3.5 w-3.5" />}
