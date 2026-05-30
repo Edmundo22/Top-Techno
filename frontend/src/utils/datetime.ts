@@ -47,6 +47,20 @@ export function formatBRDateTimeFull(value: string | Date | null | undefined): s
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+export function formatBRDate(value: string | Date | null | undefined): string {
+  if (value == null) return '—';
+  const d = parseLocal(value);
+  if (!d) return '—';
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+export function formatBRTime(value: string | Date | null | undefined): string {
+  if (value == null) return '—';
+  const d = parseLocal(value);
+  if (!d) return '—';
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 export function formatClockLong(d: Date): { date: string; time: string } {
   const date = `${DIA_SEMANA_PT[d.getDay()]}, ${d.getDate()} de ${MES_PT[d.getMonth()]} de ${d.getFullYear()}`;
   const time = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
