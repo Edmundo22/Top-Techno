@@ -10,6 +10,7 @@ Módulo responsável pelos dados da tela de monitoramento ao vivo: posição atu
 | GET    | `/monitoramento/rotas`                    | Viagens de hoje + `POLYLINE` da ficha + `numeroLinha`, `numeroFt`, `idFt` + status + placa + datas início/fim. |
 | GET    | `/monitoramento/locais`                   | Locais (`TB_VIAGEM_ENTRADA` ⨝ `TB_LOCAL`) das viagens de hoje, incluindo `codigoPonto`, previstas e reais de entrada/saída. |
 | GET    | `/monitoramento/viagem-entradas?idViagem=X` | Paradas (`TB_VIAGEM_ENTRADA` ⨝ `TB_LOCAL` ⨝ `TB_VEICULO`) de uma viagem. Retorna placa, local, horários previstos/reais (`HH:mm:ss`), ordem e `tDentroMin` (DATEDIFF MINUTE entre real-ent e real-sai). Validado com Zod. |
+| GET    | `/monitoramento/viagem-posicoes?idViagem=X` | Posições registradas (`TB_VIAGEM_POSICAO` ⨝ `TB_LOCAL`) de uma viagem, ordenadas por `DT_POSICAO`. Cada item traz `posi` (ROW_NUMBER), `dtPosicao` ISO local, velocidade, ignição normalizada, lat/lng, `distRota` em metros e `pontoParada` (null se vazio/null no banco). Frontend usa pra desenhar bolinhas numeradas no mapa, azul ≤500m e vermelho >500m da rota. Validado com Zod. |
 
 Todas retornam `{ data: { ... } }` via `ok(res, ...)`.
 

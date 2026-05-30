@@ -60,6 +60,17 @@ export interface ViagemEntradaRow {
   DT_SAI_REAL_RAW: Date | string | null;
 }
 
+export interface ViagemPosicaoRow {
+  POSI: number;
+  DT_POSICAO: Date | string | null;
+  VELOCIDADE: number | null;
+  IGNICAO: string | number | boolean | null;
+  LATITUDE: number | null;
+  LONGITUDE: number | null;
+  DIST_ROTA: number | null;
+  PONTO_PARADA: string;
+}
+
 export class MonitoramentoRepository {
   async listVeiculosDia(): Promise<VeiculoRow[]> {
     const pool = await getPool();
@@ -169,6 +180,29 @@ export class MonitoramentoRepository {
          INNER JOIN [TOP_TECHNO].[dbo].[TB_VEICULO] veic ON veic.ID_VEICULO = via.ID_VEICULO
          WHERE ent.ID_VIAGEM = @idViagem
          ORDER BY ent.ORDEM`,
+      );
+    return result.recordset;
+  }
+
+  async listViagemPosicoes(idViagem: number): Promise<ViagemPosicaoRow[]> {
+    const pool = await getPool();
+    const result = await pool
+      .request()
+      .input('idViagem', sql.Int, idViagem)
+      .query<ViagemPosicaoRow>(
+        `SELECT
+           ROW_NUMBER() OVER (ORDER BY P.DT_POSICAO) AS POSI,
+           P.DT_POSICAO,
+           P.VELOCIDADE,
+           P.IGNICAO,
+           P.LATITUDE,
+           P.LONGITUDE,
+           P.DIST_ROTA,
+           ISNULL(L.PONTO_PARADA, '') AS PONTO_PARADA
+         FROM [TOP_TECHNO].[dbo].[TB_VIAGEM_POSICAO] P
+         LEFT JOIN [TOP_TECHNO].[dbo].[TB_LOCAL] L ON L.ID_LOCAL = P.ID_LOCAL
+         WHERE P.ID_VIAGEM = @idViagem
+         ORDER BY P.DT_POSICAO`,
       );
     return result.recordset;
   }
