@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { CarLegendIcon, LocalPinLegendIcon } from '../ui/icons';
 
-type LegendKind = 'veiculo' | 'local';
+type LegendKind = 'veiculo' | 'local' | 'posicao';
 
 interface LegendItem {
   kind: LegendKind;
@@ -21,7 +21,24 @@ const LOCAIS: LegendItem[] = [
   { kind: 'local', color: '#dc2626', label: 'Atrasado (entrada ou saída)' },
 ];
 
+const POSICOES: LegendItem[] = [
+  { kind: 'posicao', color: '#1d4ed8', label: 'Posição até 500 m da rota' },
+  { kind: 'posicao', color: '#dc2626', label: 'Posição a mais de 500 m da rota' },
+];
+
 function LegendRow({ item }: { item: LegendItem }) {
+  if (item.kind === 'posicao') {
+    return (
+      <li className="flex items-center gap-2 text-xs text-brand-ink">
+        <span
+          className="inline-block h-3.5 w-3.5 shrink-0 rounded-full border-[1.5px] border-white drop-shadow-sm"
+          style={{ backgroundColor: item.color }}
+          aria-hidden
+        />
+        <span>{item.label}</span>
+      </li>
+    );
+  }
   const Icon = item.kind === 'veiculo' ? CarLegendIcon : LocalPinLegendIcon;
   return (
     <li className="flex items-center gap-2 text-xs text-brand-ink">
@@ -80,6 +97,7 @@ export function MapLegend({ extra }: MapLegendProps) {
           <div className="flex flex-col gap-3">
             <LegendGroup title="Veículos" items={VEICULOS} />
             <LegendGroup title="Locais" items={LOCAIS} />
+            <LegendGroup title="Posições" items={POSICOES} />
           </div>
         </div>
       )}
