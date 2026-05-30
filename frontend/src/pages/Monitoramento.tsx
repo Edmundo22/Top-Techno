@@ -43,6 +43,9 @@ export function MonitoramentoPage() {
   // Seleção (placa↔linha bidirecional, multi-select)
   const [selectedPlacas, setSelectedPlacas] = useState<string[]>([]);
   const [selectedLinhas, setSelectedLinhas] = useState<string[]>([]);
+  // Subconjunto das placas selecionadas para as quais o usuário ligou
+  // o "Mostrar posições" — vai virar uma camada de bolinhas no mapa.
+  const [selectedPosicoesPlacas, setSelectedPosicoesPlacas] = useState<string[]>([]);
   // Seleção de rota individual (vinda do clique na tabela / endpoints I/F)
   const [selectedViagemId, setSelectedViagemId] = useState<number | null>(null);
 
@@ -223,6 +226,22 @@ export function MonitoramentoPage() {
     setSelectedViagemId((current) => (current === idViagem ? null : idViagem));
   }, []);
 
+  const handleTogglePosicoes = useCallback((placa: string) => {
+    setSelectedPosicoesPlacas((prev) =>
+      prev.includes(placa) ? prev.filter((p) => p !== placa) : [...prev, placa],
+    );
+  }, []);
+
+  // Quando o usuário desseleciona uma placa (direta ou indireta via linha),
+  // as posições daquela placa também devem sumir do mapa automaticamente.
+  // `selectedPlacas` é nossa fonte de verdade — nada fora dela pode ficar
+  // pendurado em `selectedPosicoesPlacas`.
+  useEffect(() => {
+    setSelectedPosicoesPlacas((prev) =>
+      prev.filter((p) => selectedPlacas.includes(p)),
+    );
+  }, [selectedPlacas]);
+
   const handleToggleRotas = () => {
     setShowRotas((v) => {
       const next = !v;
@@ -275,6 +294,20 @@ export function MonitoramentoPage() {
       (v) => v.placa != null && placasFiltradas.has(v.placa) && v.idViagem != null,
     );
   }, [veiculosComRota, hasSelection, placasFiltradas]);
+
+  // Pares {idViagem, placa} para placas em que o usuário pediu para ver
+  // as bolinhas de posição. Lookup direto em `veiculos` (não em
+  // `veiculosComRota`) — se o veículo perdeu a flag temRota no meio do
+  // caminho mas a placa continua selecionada para posições, ainda
+  // queremos mostrar.
+  const placasComPosicoes = useMemo(() => {
+    const result: Array<{ idViagem: number; placa: string }> = [];
+    for (const placa of selectedPosicoesPlacas) {
+      const v = veiculos.find((x) => x.placa === placa && x.idViagem != null);
+      if (v && v.idViagem != null) result.push({ idViagem: v.idViagem, placa });
+    }
+    return result;
+  }, [selectedPosicoesPlacas, veiculos]);
 
   // Quando o usuário seleciona uma viagem pela tabela de rotas e essa viagem
   // tem placa, considere também essa placa como "selecionada" visualmente —
@@ -359,6 +392,8 @@ export function MonitoramentoPage() {
             placas={placasDisponiveis}
             selectedPlacas={selectedPlacas}
             onTogglePlaca={handleTogglePlaca}
+            selectedPosicoesPlacas={selectedPosicoesPlacas}
+            onTogglePosicoes={handleTogglePosicoes}
             linhas={linhasDisponiveis}
             selectedLinhas={selectedLinhas}
             onToggleLinha={handleToggleLinha}
@@ -374,6 +409,7 @@ export function MonitoramentoPage() {
               onSelectViagem={handleSelectViagem}
               onVisibleLocaisChange={handleVisibleLocaisChange}
               onMapReady={handleMapReady}
+              posicoesPlacas={placasComPosicoes}
             />
           </div>
         </section>
