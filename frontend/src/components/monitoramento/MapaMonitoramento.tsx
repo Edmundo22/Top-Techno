@@ -7,6 +7,7 @@ import { formatBRDateTime } from '../../utils/datetime';
 import { logError, logSuccess } from '../../utils/logger';
 import { LocalMarker } from './LocalMarker';
 import { MapLegend } from './MapLegend';
+import { PosicoesLayer } from './PosicoesLayer';
 import { VeiculoMarker } from './VeiculoMarker';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
@@ -56,6 +57,10 @@ interface MapaMonitoramentoProps {
    *  isso, a primeira leva pode chegar antes do contexto do mapa estar montado
    *  e os `<VeiculoMarker>` falham silenciosamente até o próximo poll. */
   onMapReady?: () => void;
+  /** Placas (com idViagem) para as quais o usuário pediu para ver as posições
+   *  da viagem. Cada item monta um `<PosicoesLayer>` que faz seu próprio
+   *  polling e desenha as bolinhas numeradas no mapa. */
+  posicoesPlacas?: Array<{ idViagem: number; placa: string }>;
 }
 
 export function MapaMonitoramento({
@@ -68,6 +73,7 @@ export function MapaMonitoramento({
   onSelectViagem,
   onVisibleLocaisChange,
   onMapReady,
+  posicoesPlacas,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -323,6 +329,10 @@ export function MapaMonitoramento({
             data={v}
             color={pickVeiculoColor(v)}
           />
+        ))}
+
+        {posicoesPlacas?.map(({ idViagem, placa }) => (
+          <PosicoesLayer key={`pos-${idViagem}`} idViagem={idViagem} placa={placa} />
         ))}
       </GoogleMap>
       <MapLegend
