@@ -73,10 +73,27 @@ export interface ViagemEntradasResponse {
   entradas: ViagemEntrada[];
 }
 
+export interface ViagemPosicao {
+  posi: number;
+  dtPosicao: string | null;
+  velocidade: number | null;
+  ignicao: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  distRota: number | null;
+  pontoParada: string | null;
+}
+
+export interface ViagemPosicoesResponse {
+  posicoes: ViagemPosicao[];
+}
+
 export const monitoramentoEndpoints = {
   veiculos: '/monitoramento/veiculos',
   rotas: '/monitoramento/rotas',
   locais: '/monitoramento/locais',
   viagemEntradas: (idViagem: number) =>
     `/monitoramento/viagem-entradas?idViagem=${idViagem}`,
+  viagemPosicoes: (idViagem: number) =>
+    `/monitoramento/viagem-posicoes?idViagem=${idViagem}`,
 } as const;
