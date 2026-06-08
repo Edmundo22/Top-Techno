@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ClockCard } from '../components/monitoramento/ClockCard';
 import { FiltrosLateral } from '../components/monitoramento/FiltrosLateral';
@@ -232,14 +232,23 @@ export function MonitoramentoPage() {
     );
   }, []);
 
-  // Quando o usuário desseleciona uma placa (direta ou indireta via linha),
-  // as posições daquela placa também devem sumir do mapa automaticamente.
-  // `selectedPlacas` é nossa fonte de verdade — nada fora dela pode ficar
-  // pendurado em `selectedPosicoesPlacas`.
+  // Sincroniza `selectedPosicoesPlacas` com mudanças em `selectedPlacas`:
+  // 1) Placas que saíram da seleção também saem das posições (auto-cleanup).
+  // 2) Placas que ENTRARAM na seleção entram já com o olho LIGADO por
+  //    padrão — o usuário pediu pra ver as posições logo de cara.
+  // Comparação contra o ref do ciclo anterior pra distinguir "novidade" de
+  // "estava lá e o usuário tirou manualmente o olho".
+  const prevSelectedPlacasRef = useRef<string[]>([]);
   useEffect(() => {
-    setSelectedPosicoesPlacas((prev) =>
-      prev.filter((p) => selectedPlacas.includes(p)),
-    );
+    const prevSel = new Set(prevSelectedPlacasRef.current);
+    const currSel = new Set(selectedPlacas);
+    setSelectedPosicoesPlacas((prev) => {
+      const filtered = prev.filter((p) => currSel.has(p));
+      const newlyAdded = selectedPlacas.filter((p) => !prevSel.has(p));
+      if (newlyAdded.length === 0) return filtered;
+      return Array.from(new Set([...filtered, ...newlyAdded]));
+    });
+    prevSelectedPlacasRef.current = selectedPlacas;
   }, [selectedPlacas]);
 
   const handleToggleRotas = () => {
