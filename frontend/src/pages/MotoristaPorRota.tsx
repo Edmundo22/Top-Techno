@@ -7,9 +7,11 @@ import { MotoristasTable } from '../components/cadastros/motoristas/MotoristasTa
 import { MotoristaFormModal } from '../components/cadastros/motoristas/MotoristaFormModal';
 import { RotaSelectMapCard } from '../components/cadastros/motoristas/RotaSelectMapCard';
 import { VinculadosTable } from '../components/cadastros/motoristas/VinculadosTable';
+import { DisponiveisCard } from '../components/cadastros/motoristas/DisponiveisCard';
 import { motoristasApi, type MotoristaDTO } from '../services/motoristasApi';
 import {
   motoristaRotaApi,
+  type DisponivelDTO,
   type RotaFtDTO,
   type VinculadoDTO,
 } from '../services/motoristaRotaApi';
@@ -36,6 +38,9 @@ export function MotoristaPorRotaPage() {
   const [linkBusyId, setLinkBusyId] = useState<number | null>(null);
   const [confirmDesvincular, setConfirmDesvincular] = useState<VinculadoDTO | null>(null);
   const [desvincularError, setDesvincularError] = useState<string | null>(null);
+  const [disponiveis, setDisponiveis] = useState<DisponivelDTO[]>([]);
+  const [disponiveisLoading, setDisponiveisLoading] = useState(false);
+  const [vincularSubmitting, setVincularSubmitting] = useState(false);
 
   const fetchMotoristas = useCallback(async () => {
     setLoading(true);
@@ -70,23 +75,30 @@ export function MotoristaPorRotaPage() {
     fetchRotas();
   }, [fetchMotoristas, fetchRotas]);
 
-  // Recarrega os vínculos da rota selecionada (fonte de verdade no pai, para
-  // que titular/desvincular reflitam imediatamente na tabela).
+  // Recarrega vinculados + disponíveis da rota (fonte de verdade no pai, para
+  // que titular/desvincular/vincular reflitam imediatamente nos dois cards).
   const refreshLinks = useCallback(async (idFt: number) => {
     setVinculadosLoading(true);
+    setDisponiveisLoading(true);
     try {
-      const vinc = await motoristaRotaApi.listVinculados(idFt);
+      const [vinc, disp] = await Promise.all([
+        motoristaRotaApi.listVinculados(idFt),
+        motoristaRotaApi.listDisponiveis(idFt),
+      ]);
       setVinculados(vinc);
+      setDisponiveis(disp);
     } catch (err) {
-      logError('list vinculados', err);
+      logError('list vinculos', err);
     } finally {
       setVinculadosLoading(false);
+      setDisponiveisLoading(false);
     }
   }, []);
 
   useEffect(() => {
     if (selectedIdFt == null) {
       setVinculados([]);
+      setDisponiveis([]);
       return;
     }
     refreshLinks(selectedIdFt);
@@ -103,6 +115,20 @@ export function MotoristaPorRotaPage() {
       logError('set titular', err);
     } finally {
       setLinkBusyId(null);
+    }
+  };
+
+  const handleVincular = async (idsCadMot: number[]) => {
+    if (selectedIdFt == null || idsCadMot.length === 0) return;
+    setVincularSubmitting(true);
+    try {
+      await motoristaRotaApi.vincular(selectedIdFt, idsCadMot);
+      logSuccess('motoristas vinculados', { idFt: selectedIdFt, total: idsCadMot.length });
+      await refreshLinks(selectedIdFt);
+    } catch (err) {
+      logError('vincular', err);
+    } finally {
+      setVincularSubmitting(false);
     }
   };
 
@@ -222,16 +248,25 @@ export function MotoristaPorRotaPage() {
               Selecione uma rota para gerenciar os motoristas vinculados.
             </div>
           ) : (
-            <VinculadosTable
-              vinculados={vinculados}
-              loading={vinculadosLoading}
-              busyId={linkBusyId}
-              onToggleTitular={handleToggleTitular}
-              onDesvincular={(v) => {
-                setDesvincularError(null);
-                setConfirmDesvincular(v);
-              }}
-            />
+            <>
+              <VinculadosTable
+                vinculados={vinculados}
+                loading={vinculadosLoading}
+                busyId={linkBusyId}
+                onToggleTitular={handleToggleTitular}
+                onDesvincular={(v) => {
+                  setDesvincularError(null);
+                  setConfirmDesvincular(v);
+                }}
+              />
+              <DisponiveisCard
+                key={selectedIdFt}
+                disponiveis={disponiveis}
+                loading={disponiveisLoading}
+                submitting={vincularSubmitting}
+                onVincular={handleVincular}
+              />
+            </>
           )}
         </div>
       </div>
