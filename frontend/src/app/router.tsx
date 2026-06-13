@@ -3,6 +3,7 @@ import { CadastroLocaisPage } from '../pages/CadastroLocais';
 import { HistoricoPage } from '../pages/Historico';
 import { LoginPage } from '../pages/Login';
 import { MonitoramentoPage } from '../pages/Monitoramento';
+import { MotoristaPorRotaPage } from '../pages/MotoristaPorRota';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 
 export function AppRoutes() {
@@ -30,6 +31,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <CadastroLocaisPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cadastros/motorista-por-rota"
+        element={
+          <ProtectedRoute>
+            <MotoristaPorRotaPage />
           </ProtectedRoute>
         }
       />
