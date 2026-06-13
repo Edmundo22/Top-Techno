@@ -100,7 +100,7 @@ const items: NavItem[] = [
       ),
       children: [
         { to: '/cadastros/locais', label: 'Locais' },
-        { to: '/cadastros/rotas', label: 'Rotas' },
+        { to: '/cadastros/motorista-por-rota', label: 'Motorista por Rota' },
       ],
     },
   },
