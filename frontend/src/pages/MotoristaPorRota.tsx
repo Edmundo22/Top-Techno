@@ -5,7 +5,9 @@ import { Modal } from '../components/ui/Modal';
 import { PlusIcon, SearchIcon } from '../components/ui/icons';
 import { MotoristasTable } from '../components/cadastros/motoristas/MotoristasTable';
 import { MotoristaFormModal } from '../components/cadastros/motoristas/MotoristaFormModal';
+import { RotaSelectMapCard } from '../components/cadastros/motoristas/RotaSelectMapCard';
 import { motoristasApi, type MotoristaDTO } from '../services/motoristasApi';
+import { motoristaRotaApi, type RotaFtDTO } from '../services/motoristaRotaApi';
 import { extractErrorMessage } from '../services/api';
 import { logError, logSuccess } from '../utils/logger';
 
@@ -19,6 +21,11 @@ export function MotoristaPorRotaPage() {
   const [confirmDelete, setConfirmDelete] = useState<MotoristaDTO | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Coluna direita — rotas + seleção
+  const [rotas, setRotas] = useState<RotaFtDTO[]>([]);
+  const [rotasLoading, setRotasLoading] = useState(false);
+  const [selectedIdFt, setSelectedIdFt] = useState<number | null>(null);
 
   const fetchMotoristas = useCallback(async () => {
     setLoading(true);
@@ -35,9 +42,23 @@ export function MotoristaPorRotaPage() {
     }
   }, []);
 
+  const fetchRotas = useCallback(async () => {
+    setRotasLoading(true);
+    try {
+      const data = await motoristaRotaApi.listRotas();
+      setRotas(data);
+      logSuccess('rotas carregadas', { total: data.length });
+    } catch (err) {
+      logError('list rotas', err);
+    } finally {
+      setRotasLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMotoristas();
-  }, [fetchMotoristas]);
+    fetchRotas();
+  }, [fetchMotoristas, fetchRotas]);
 
   const openCreate = () => {
     setEditing(null);
@@ -124,11 +145,24 @@ export function MotoristaPorRotaPage() {
           </div>
         </div>
 
-        {/* Coluna direita — vínculo motorista↔rota (próximos commits) */}
+        {/* Coluna direita — vínculo motorista↔rota */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:basis-[55%]">
-          <div className="grid flex-1 place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
-            Selecione uma rota para gerenciar os motoristas vinculados.
-          </div>
+          <RotaSelectMapCard
+            rotas={rotas}
+            loading={rotasLoading}
+            selectedIdFt={selectedIdFt}
+            onSelect={setSelectedIdFt}
+          />
+
+          {selectedIdFt == null ? (
+            <div className="grid flex-1 place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
+              Selecione uma rota para gerenciar os motoristas vinculados.
+            </div>
+          ) : (
+            <div className="grid flex-1 place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
+              Vínculos da rota (em breve).
+            </div>
+          )}
         </div>
       </div>
 
