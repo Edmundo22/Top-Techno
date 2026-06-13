@@ -6,8 +6,13 @@ import { PlusIcon, SearchIcon } from '../components/ui/icons';
 import { MotoristasTable } from '../components/cadastros/motoristas/MotoristasTable';
 import { MotoristaFormModal } from '../components/cadastros/motoristas/MotoristaFormModal';
 import { RotaSelectMapCard } from '../components/cadastros/motoristas/RotaSelectMapCard';
+import { VinculadosTable } from '../components/cadastros/motoristas/VinculadosTable';
 import { motoristasApi, type MotoristaDTO } from '../services/motoristasApi';
-import { motoristaRotaApi, type RotaFtDTO } from '../services/motoristaRotaApi';
+import {
+  motoristaRotaApi,
+  type RotaFtDTO,
+  type VinculadoDTO,
+} from '../services/motoristaRotaApi';
 import { extractErrorMessage } from '../services/api';
 import { logError, logSuccess } from '../utils/logger';
 
@@ -22,10 +27,15 @@ export function MotoristaPorRotaPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Coluna direita — rotas + seleção
+  // Coluna direita — rotas + seleção + vínculos
   const [rotas, setRotas] = useState<RotaFtDTO[]>([]);
   const [rotasLoading, setRotasLoading] = useState(false);
   const [selectedIdFt, setSelectedIdFt] = useState<number | null>(null);
+  const [vinculados, setVinculados] = useState<VinculadoDTO[]>([]);
+  const [vinculadosLoading, setVinculadosLoading] = useState(false);
+  const [linkBusyId, setLinkBusyId] = useState<number | null>(null);
+  const [confirmDesvincular, setConfirmDesvincular] = useState<VinculadoDTO | null>(null);
+  const [desvincularError, setDesvincularError] = useState<string | null>(null);
 
   const fetchMotoristas = useCallback(async () => {
     setLoading(true);
@@ -59,6 +69,59 @@ export function MotoristaPorRotaPage() {
     fetchMotoristas();
     fetchRotas();
   }, [fetchMotoristas, fetchRotas]);
+
+  // Recarrega os vínculos da rota selecionada (fonte de verdade no pai, para
+  // que titular/desvincular reflitam imediatamente na tabela).
+  const refreshLinks = useCallback(async (idFt: number) => {
+    setVinculadosLoading(true);
+    try {
+      const vinc = await motoristaRotaApi.listVinculados(idFt);
+      setVinculados(vinc);
+    } catch (err) {
+      logError('list vinculados', err);
+    } finally {
+      setVinculadosLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedIdFt == null) {
+      setVinculados([]);
+      return;
+    }
+    refreshLinks(selectedIdFt);
+  }, [selectedIdFt, refreshLinks]);
+
+  const handleToggleTitular = async (v: VinculadoDTO) => {
+    if (selectedIdFt == null) return;
+    setLinkBusyId(v.idCadMotRota);
+    try {
+      await motoristaRotaApi.setTitular(selectedIdFt, v.idCadMot, !v.titular);
+      logSuccess('titular atualizado', { idCadMot: v.idCadMot, titular: !v.titular });
+      await refreshLinks(selectedIdFt);
+    } catch (err) {
+      logError('set titular', err);
+    } finally {
+      setLinkBusyId(null);
+    }
+  };
+
+  const handleConfirmDesvincular = async () => {
+    if (!confirmDesvincular || selectedIdFt == null) return;
+    setLinkBusyId(confirmDesvincular.idCadMotRota);
+    setDesvincularError(null);
+    try {
+      await motoristaRotaApi.desvincular(confirmDesvincular.idCadMotRota);
+      logSuccess('motorista desvinculado', { idCadMotRota: confirmDesvincular.idCadMotRota });
+      setConfirmDesvincular(null);
+      await refreshLinks(selectedIdFt);
+    } catch (err) {
+      logError('desvincular', err);
+      setDesvincularError(extractErrorMessage(err, 'Falha ao desvincular motorista.'));
+    } finally {
+      setLinkBusyId(null);
+    }
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -159,9 +222,16 @@ export function MotoristaPorRotaPage() {
               Selecione uma rota para gerenciar os motoristas vinculados.
             </div>
           ) : (
-            <div className="grid flex-1 place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
-              Vínculos da rota (em breve).
-            </div>
+            <VinculadosTable
+              vinculados={vinculados}
+              loading={vinculadosLoading}
+              busyId={linkBusyId}
+              onToggleTitular={handleToggleTitular}
+              onDesvincular={(v) => {
+                setDesvincularError(null);
+                setConfirmDesvincular(v);
+              }}
+            />
           )}
         </div>
       </div>
@@ -219,6 +289,50 @@ export function MotoristaPorRotaPage() {
         {deleteError && (
           <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
             {deleteError}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={confirmDesvincular != null}
+        onClose={() => {
+          if (linkBusyId == null) {
+            setConfirmDesvincular(null);
+            setDesvincularError(null);
+          }
+        }}
+        title="Desvincular motorista"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              disabled={linkBusyId != null}
+              onClick={() => {
+                setConfirmDesvincular(null);
+                setDesvincularError(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmDesvincular}
+              disabled={linkBusyId != null}
+              className="!bg-red-600 !text-white hover:!bg-red-700"
+            >
+              {linkBusyId != null ? 'Desvinculando…' : 'Desvincular'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-brand-ink">
+          Tem certeza que deseja retirar o vínculo do motorista{' '}
+          <strong>{confirmDesvincular?.motorista ?? ''}</strong> desta rota? Ele voltará a aparecer
+          como disponível para vínculo.
+        </p>
+        {desvincularError && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {desvincularError}
           </div>
         )}
       </Modal>
