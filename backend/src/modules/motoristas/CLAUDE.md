@@ -45,4 +45,4 @@ interface MotoristaDTO {
 
 Espelha o módulo `locais`: `routes` → `controller` (thin, lê `req.validatedParams`) → `services` (`mapMotoristaRowToDTO` em [ListMotoristasService.ts](services/ListMotoristasService.ts) é o ponto único Row → DTO) → `repository` (SQL parametrizado, `INSERT ... OUTPUT INSERTED.ID_CAD_MOT`).
 
-`ID_CAD_MOT` é bindado como `sql.Int` — ajustar para `sql.BigInt` se a PK no banco for `bigint`.
+`ID_CAD_MOT` é `bigint IDENTITY` no banco — bindado como `sql.BigInt`. Lembrando que o driver `tedious` devolve `bigint` como **string** no recordset; quem reenvia esses IDs ao backend deve coerir (`z.coerce.number`).

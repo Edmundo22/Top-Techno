@@ -37,4 +37,8 @@ interface DisponivelDTO{ idCadMot: number; motorista: string | null; cnh: string
 
 ## Layers
 
-`routes` → `controller` (thin; lê `req.validatedQuery` / `req.validatedParams`) → `services` (um por operação, com mappers Row → DTO; `DT_INSERCAO` via `toIsoLocal`) → `MotoristaRotaRepository` (SQL puro, parametrizado). `ID_*` bindados como `sql.Int` / `sql.Bit`.
+`routes` → `controller` (thin; lê `req.validatedQuery` / `req.validatedParams`) → `services` (um por operação, com mappers Row → DTO; `DT_INSERCAO` via `toIsoLocal`) → `MotoristaRotaRepository` (SQL puro, parametrizado). `ID_*` são `bigint` no banco → bindados como `sql.BigInt`; `TITULAR` como `sql.Bit`.
+
+## ⚠️ bigint volta como string
+
+As PKs/FKs (`ID_CAD_MOT`, `ID_FT_TOP`, `ID_CAD_MOT_ROTA`) são `bigint` e o driver `tedious` as devolve como **string** no recordset. Por isso os schemas de corpo (`vincularBodySchema`, `setTitularBodySchema`) usam `z.coerce.number()` — sem o coerce, o `z.number()` rejeitava os IDs reenviados pelo front e respondia **400**. As queries (`idFtQuerySchema`) já coeriam por virem da query string.

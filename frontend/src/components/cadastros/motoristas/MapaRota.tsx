@@ -89,7 +89,7 @@ export function MapaRota({ polyline }: MapaRotaProps) {
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={SAO_PAULO_CENTER}
-        zoom={11}
+        zoom={14}
         options={{
           streetViewControl: false,
           fullscreenControl: false,

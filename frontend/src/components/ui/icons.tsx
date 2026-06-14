@@ -86,6 +86,34 @@ export function TrashIcon(props: IconProps) {
   );
 }
 
+// "Desvincular" — corrente partida (link-off), com os tracinhos de separação.
+export function UnlinkIcon(props: IconProps) {
+  return (
+    <svg {...baseProps} {...props}>
+      <path
+        d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.17 11.75l-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 2v3M2 8h3M16 19v3M19 16h3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function MapIcon(props: IconProps) {
   return (
     <svg {...baseProps} {...props}>
