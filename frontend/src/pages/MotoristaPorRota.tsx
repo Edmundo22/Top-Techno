@@ -38,6 +38,8 @@ export function MotoristaPorRotaPage() {
   const [linkBusyId, setLinkBusyId] = useState<number | null>(null);
   const [confirmDesvincular, setConfirmDesvincular] = useState<VinculadoDTO | null>(null);
   const [desvincularError, setDesvincularError] = useState<string | null>(null);
+  const [confirmTitular, setConfirmTitular] = useState<VinculadoDTO | null>(null);
+  const [titularError, setTitularError] = useState<string | null>(null);
   const [disponiveis, setDisponiveis] = useState<DisponivelDTO[]>([]);
   const [disponiveisLoading, setDisponiveisLoading] = useState(false);
   const [vincularSubmitting, setVincularSubmitting] = useState(false);
@@ -104,15 +106,34 @@ export function MotoristaPorRotaPage() {
     refreshLinks(selectedIdFt);
   }, [selectedIdFt, refreshLinks]);
 
-  const handleToggleTitular = async (v: VinculadoDTO) => {
-    if (selectedIdFt == null) return;
-    setLinkBusyId(v.idCadMotRota);
+  // Titular atual da rota (se houver) — usado pra montar a mensagem de troca.
+  const currentTitular = vinculados.find((x) => x.titular) ?? null;
+
+  const titularModalMessage = (() => {
+    if (!confirmTitular) return '';
+    const nome = confirmTitular.motorista ?? '';
+    if (confirmTitular.titular) {
+      return `Deseja remover "${nome}" como titular desta rota?`;
+    }
+    if (currentTitular && currentTitular.idCadMot !== confirmTitular.idCadMot) {
+      return `Deseja trocar o "${currentTitular.motorista ?? ''}" pelo "${nome}"?`;
+    }
+    return `Deseja deixar "${nome}" como titular desta rota?`;
+  })();
+
+  const handleConfirmTitular = async () => {
+    if (!confirmTitular || selectedIdFt == null) return;
+    const alvo = confirmTitular;
+    setLinkBusyId(alvo.idCadMotRota);
+    setTitularError(null);
     try {
-      await motoristaRotaApi.setTitular(selectedIdFt, v.idCadMot, !v.titular);
-      logSuccess('titular atualizado', { idCadMot: v.idCadMot, titular: !v.titular });
+      await motoristaRotaApi.setTitular(selectedIdFt, alvo.idCadMot, !alvo.titular);
+      logSuccess('titular atualizado', { idCadMot: alvo.idCadMot, titular: !alvo.titular });
+      setConfirmTitular(null);
       await refreshLinks(selectedIdFt);
     } catch (err) {
       logError('set titular', err);
+      setTitularError(extractErrorMessage(err, 'Falha ao atualizar titular.'));
     } finally {
       setLinkBusyId(null);
     }
@@ -259,7 +280,10 @@ export function MotoristaPorRotaPage() {
                     vinculados={vinculados}
                     loading={vinculadosLoading}
                     busyId={linkBusyId}
-                    onToggleTitular={handleToggleTitular}
+                    onToggleTitular={(v) => {
+                      setTitularError(null);
+                      setConfirmTitular(v);
+                    }}
                     onDesvincular={(v) => {
                       setDesvincularError(null);
                       setConfirmDesvincular(v);
@@ -378,6 +402,42 @@ export function MotoristaPorRotaPage() {
         {desvincularError && (
           <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
             {desvincularError}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={confirmTitular != null}
+        onClose={() => {
+          if (linkBusyId == null) {
+            setConfirmTitular(null);
+            setTitularError(null);
+          }
+        }}
+        title="Titular da rota"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              disabled={linkBusyId != null}
+              onClick={() => {
+                setConfirmTitular(null);
+                setTitularError(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmTitular} disabled={linkBusyId != null}>
+              {linkBusyId != null ? 'Salvando…' : 'Confirmar'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-brand-ink">{titularModalMessage}</p>
+        {titularError && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {titularError}
           </div>
         )}
       </Modal>
