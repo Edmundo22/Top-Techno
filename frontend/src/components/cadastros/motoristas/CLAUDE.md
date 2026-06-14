@@ -29,9 +29,10 @@ cards preenchem a altura (`h-full min-h-0`); o mini-mapa é `flex-1` dentro do c
 `motoristas` + estado do CRUD (optimistic update no save/delete, igual locais).
 `rotas` (fetch no mount), `selectedIdFt`, `vinculados`, `disponiveis`.
 `refreshLinks(idFt)` recarrega vinculados + disponíveis em paralelo — é o ponto
-único de sincronização. Disparado: ao trocar `selectedIdFt`, após vincular, após
-desvincular. Titular só recarrega via `refreshLinks` também (reflete a regra de
-titular único que o backend aplica em múltiplas linhas).
+único de sincronização. Disparado: ao trocar `selectedIdFt`, após vincular,
+desvincular, definir titular, e **após qualquer CRUD de motorista** (criar/editar/
+excluir) — pois os cards mostram nome+CNH (join com `APP_CAD_MOT`) e precisam
+refletir o dado novo/editado/removido sem trocar de rota.
 
 Clicar no checkbox de titular **não** aplica direto: abre um modal de confirmação
 (`confirmTitular`). A mensagem varia — "deixar X como titular", "trocar o X pelo Y"
