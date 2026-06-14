@@ -25,7 +25,7 @@ export function RotaSelectMapCard({
   const semTracado = selected != null && !selected.polyline;
 
   return (
-    <Card className="flex shrink-0 flex-col gap-3 p-4">
+    <Card className="flex h-full min-h-0 flex-col gap-3 p-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="rota-select" className="text-xs font-medium text-brand-ink-soft">
           Rota
@@ -46,7 +46,7 @@ export function RotaSelectMapCard({
         </select>
       </div>
 
-      <div className="h-[260px]">
+      <div className="min-h-0 flex-1">
         {semTracado ? (
           <div className="grid h-full place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 text-xs text-brand-ink-muted">
             Esta rota não tem traçado cadastrado.

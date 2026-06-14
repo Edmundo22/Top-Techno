@@ -14,11 +14,15 @@ MotoristaPorRota.tsx (page) — dona de TODO o estado
   │    ├─ MotoristaFormModal   ← criação/edição (mesmo componente, prop `initial`)
   │    └─ Modal (confirmar exclusão)
   └─ Coluna direita (vínculo, só com rota selecionada)
-       ├─ RotaSelectMapCard    ← <select> de rotas + MapaRota (mini-mapa)
-       ├─ VinculadosTable      ← vinculados da rota + checkbox TITULAR + desvincular
-       ├─ DisponiveisCard      ← checkboxes dos não-vinculados + "Vincular selecionados"
+       ├─ RotaSelectMapCard    ← <select> de rotas + MapaRota (mini-mapa)  [1/3 da altura]
+       ├─ Linha [2/3 da altura], dois cards lado a lado:
+       │    ├─ VinculadosTable  ← vinculados + checkbox TITULAR + desvincular  [~60% largura]
+       │    └─ DisponiveisCard  ← lista de não-vinculados + "Vincular selecionados"  [~40%]
        └─ Modal (confirmar desvincular)
 ```
+
+A coluna direita usa `basis-1/3` (rota/mapa) + `basis-2/3` (linha de vínculos). Os
+cards preenchem a altura (`h-full min-h-0`); o mini-mapa é `flex-1` dentro do card.
 
 ## Estado (tudo na página)
 
