@@ -37,7 +37,7 @@ export function DisponiveisCard({
   };
 
   return (
-    <Card className="flex max-h-[320px] flex-col overflow-hidden p-0">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden p-0">
       <div className="flex flex-shrink-0 items-center justify-between border-b border-brand-line px-4 py-3">
         <h3 className="text-sm font-semibold text-brand-ink">Disponíveis para vincular</h3>
         <span className="text-[11px] text-brand-ink-muted">{disponiveis.length} motorista(s)</span>
@@ -54,16 +54,18 @@ export function DisponiveisCard({
         <ul className="flex flex-col">
           {disponiveis.map((d) => (
             <li key={d.idCadMot}>
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs text-brand-ink hover:bg-brand-line-soft">
+              <label className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 text-xs text-brand-ink hover:bg-brand-line-soft">
                 <input
                   type="checkbox"
                   checked={checked.has(d.idCadMot)}
                   onChange={() => toggle(d.idCadMot)}
                   disabled={submitting}
-                  className="h-4 w-4 accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                 />
-                <span className="font-medium">{d.motorista ?? '-'}</span>
-                <span className="text-brand-ink-muted">· CNH {d.cnh ?? '-'}</span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-medium">{d.motorista ?? '-'}</span>
+                  <span className="text-[11px] text-brand-ink-muted">CNH {d.cnh ?? '-'}</span>
+                </span>
               </label>
             </li>
           ))}

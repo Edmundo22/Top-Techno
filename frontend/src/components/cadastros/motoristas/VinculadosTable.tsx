@@ -18,7 +18,7 @@ export function VinculadosTable({
   onDesvincular,
 }: VinculadosTableProps) {
   return (
-    <Card className="flex max-h-[320px] flex-col overflow-hidden p-0">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden p-0">
       <div className="flex flex-shrink-0 items-center justify-between border-b border-brand-line px-4 py-3">
         <h3 className="text-sm font-semibold text-brand-ink">Motoristas vinculados</h3>
         <span className="text-[11px] text-brand-ink-muted">{vinculados.length} vínculo(s)</span>

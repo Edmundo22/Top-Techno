@@ -235,39 +235,49 @@ export function MotoristaPorRotaPage() {
         </div>
 
         {/* Coluna direita — vínculo motorista↔rota */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:basis-[55%]">
-          <RotaSelectMapCard
-            rotas={rotas}
-            loading={rotasLoading}
-            selectedIdFt={selectedIdFt}
-            onSelect={setSelectedIdFt}
-          />
+        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:basis-[55%]">
+          {/* Rota + mini-mapa — 1/3 da altura */}
+          <div className="min-h-0 basis-1/3">
+            <RotaSelectMapCard
+              rotas={rotas}
+              loading={rotasLoading}
+              selectedIdFt={selectedIdFt}
+              onSelect={setSelectedIdFt}
+            />
+          </div>
 
-          {selectedIdFt == null ? (
-            <div className="grid flex-1 place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
-              Selecione uma rota para gerenciar os motoristas vinculados.
-            </div>
-          ) : (
-            <>
-              <VinculadosTable
-                vinculados={vinculados}
-                loading={vinculadosLoading}
-                busyId={linkBusyId}
-                onToggleTitular={handleToggleTitular}
-                onDesvincular={(v) => {
-                  setDesvincularError(null);
-                  setConfirmDesvincular(v);
-                }}
-              />
-              <DisponiveisCard
-                key={selectedIdFt}
-                disponiveis={disponiveis}
-                loading={disponiveisLoading}
-                submitting={vincularSubmitting}
-                onVincular={handleVincular}
-              />
-            </>
-          )}
+          {/* Vinculados (mais largo) + Disponíveis (mais estreito) lado a lado — 2/3 */}
+          <div className="min-h-0 basis-2/3">
+            {selectedIdFt == null ? (
+              <div className="grid h-full place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
+                Selecione uma rota para gerenciar os motoristas vinculados.
+              </div>
+            ) : (
+              <div className="flex h-full min-h-0 gap-3">
+                <div className="min-h-0 min-w-0 basis-[60%]">
+                  <VinculadosTable
+                    vinculados={vinculados}
+                    loading={vinculadosLoading}
+                    busyId={linkBusyId}
+                    onToggleTitular={handleToggleTitular}
+                    onDesvincular={(v) => {
+                      setDesvincularError(null);
+                      setConfirmDesvincular(v);
+                    }}
+                  />
+                </div>
+                <div className="min-h-0 min-w-0 basis-[40%]">
+                  <DisponiveisCard
+                    key={selectedIdFt}
+                    disponiveis={disponiveis}
+                    loading={disponiveisLoading}
+                    submitting={vincularSubmitting}
+                    onVincular={handleVincular}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
