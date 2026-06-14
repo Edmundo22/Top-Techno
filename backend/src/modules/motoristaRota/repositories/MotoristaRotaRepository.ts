@@ -40,7 +40,7 @@ export class MotoristaRotaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('idFt', sql.Int, idFt)
+      .input('idFt', sql.BigInt, idFt)
       .query<VinculadoRow>(
         `SELECT mr.ID_CAD_MOT_ROTA, mr.ID_CAD_MOT, m.MOTORISTA, m.CNH, mr.TITULAR, mr.DT_INSERCAO
          FROM [CORREIO].[dbo].[APP_CAD_MOT_ROTA] mr
@@ -56,7 +56,7 @@ export class MotoristaRotaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('idFt', sql.Int, idFt)
+      .input('idFt', sql.BigInt, idFt)
       .query<DisponivelRow>(
         `SELECT M.ID_CAD_MOT, M.MOTORISTA, M.CNH
          FROM [CORREIO].[dbo].[APP_CAD_MOT] M
@@ -74,10 +74,10 @@ export class MotoristaRotaRepository {
   async vincular(idFt: number, idsCadMot: number[]): Promise<void> {
     if (idsCadMot.length === 0) return;
     const pool = await getPool();
-    const request = pool.request().input('idFt', sql.Int, idFt);
+    const request = pool.request().input('idFt', sql.BigInt, idFt);
     const valuesSql = idsCadMot
       .map((id, i) => {
-        request.input(`id${i}`, sql.Int, id);
+        request.input(`id${i}`, sql.BigInt, id);
         return `(@id${i})`;
       })
       .join(', ');
@@ -99,8 +99,8 @@ export class MotoristaRotaRepository {
     const pool = await getPool();
     await pool
       .request()
-      .input('idFt', sql.Int, idFt)
-      .input('idCadMot', sql.Int, idCadMot)
+      .input('idFt', sql.BigInt, idFt)
+      .input('idCadMot', sql.BigInt, idCadMot)
       .input('titular', sql.Bit, titular)
       .query(
         `UPDATE [CORREIO].[dbo].[APP_CAD_MOT_ROTA] SET TITULAR = 0 WHERE ID_FT_TOP = @idFt;
@@ -113,7 +113,7 @@ export class MotoristaRotaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('idCadMotRota', sql.Int, idCadMotRota)
+      .input('idCadMotRota', sql.BigInt, idCadMotRota)
       .query(
         'DELETE FROM [CORREIO].[dbo].[APP_CAD_MOT_ROTA] WHERE ID_CAD_MOT_ROTA = @idCadMotRota;',
       );

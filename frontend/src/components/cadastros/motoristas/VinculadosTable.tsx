@@ -1,5 +1,5 @@
 import { Card } from '../../ui/Card';
-import { TrashIcon } from '../../ui/icons';
+import { UnlinkIcon } from '../../ui/icons';
 import type { VinculadoDTO } from '../../../services/motoristaRotaApi';
 
 interface VinculadosTableProps {
@@ -69,9 +69,9 @@ export function VinculadosTable({
                     aria-label="Desvincular da rota"
                     disabled={busyId != null}
                     onClick={() => onDesvincular(v)}
-                    className="mx-auto grid h-8 w-8 place-items-center rounded-md text-brand-ink-soft transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mx-auto grid h-8 w-8 place-items-center rounded-md text-brand-ink-soft transition-colors hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <TrashIcon className="h-4 w-4" />
+                    <UnlinkIcon className="h-4 w-4" />
                   </button>
                 </td>
               </tr>

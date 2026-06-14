@@ -37,7 +37,7 @@ export class MotoristaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .query<MotoristaRow>(`${BASE_SELECT} WHERE ID_CAD_MOT = @id`);
     return result.recordset[0] ?? null;
   }
@@ -72,7 +72,7 @@ export class MotoristaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .input('motorista', sql.NVarChar(120), input.motorista)
       .input('cnh', sql.VarChar(20), input.cnh)
       .input('cpf', sql.VarChar(14), input.cpf)
@@ -96,7 +96,7 @@ export class MotoristaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .query<{ TOTAL: number }>(
         `SELECT COUNT(*) AS TOTAL
          FROM [CORREIO].[dbo].[APP_CAD_MOT_ROTA]
@@ -109,7 +109,7 @@ export class MotoristaRepository {
     const pool = await getPool();
     const result = await pool
       .request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .query('DELETE FROM [CORREIO].[dbo].[APP_CAD_MOT] WHERE ID_CAD_MOT = @id;');
     return result.rowsAffected[0] > 0;
   }
