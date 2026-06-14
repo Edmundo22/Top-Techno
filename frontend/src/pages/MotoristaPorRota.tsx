@@ -188,6 +188,9 @@ export function MotoristaPorRotaPage() {
     });
     setShowForm(false);
     setEditing(null);
+    // Vinculados/disponíveis mostram nome+CNH (join com APP_CAD_MOT): recarrega
+    // para refletir o motorista novo/editado nos dois cards da rota selecionada.
+    if (selectedIdFt != null) void refreshLinks(selectedIdFt);
   };
 
   const handleConfirmDelete = async () => {
@@ -199,6 +202,8 @@ export function MotoristaPorRotaPage() {
       setMotoristas((prev) => prev.filter((m) => m.idCadMot !== confirmDelete.idCadMot));
       logSuccess('motorista excluído', { idCadMot: confirmDelete.idCadMot });
       setConfirmDelete(null);
+      // Recarrega os cards da rota (o motorista some dos disponíveis).
+      if (selectedIdFt != null) await refreshLinks(selectedIdFt);
     } catch (err) {
       logError('delete motorista', err);
       setDeleteError(extractErrorMessage(err, 'Falha ao excluir motorista.'));
