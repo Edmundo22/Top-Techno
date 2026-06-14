@@ -33,6 +33,12 @@ cards preenchem a altura (`h-full min-h-0`); o mini-mapa é `flex-1` dentro do c
 desvincular. Titular só recarrega via `refreshLinks` também (reflete a regra de
 titular único que o backend aplica em múltiplas linhas).
 
+Clicar no checkbox de titular **não** aplica direto: abre um modal de confirmação
+(`confirmTitular`). A mensagem varia — "deixar X como titular", "trocar o X pelo Y"
+(quando já há titular) ou "remover X como titular" (ao desmarcar). Desvincular
+também confirma em modal. `MapaRota` esconde o zoom (+/-) e mostra o botão de tela
+cheia no canto inferior direito.
+
 `DisponiveisCard` é o único com estado local (Set de marcados); recebe
 `key={selectedIdFt}` para remontar e zerar a seleção ao trocar de rota.
 

@@ -92,8 +92,12 @@ export function MapaRota({ polyline }: MapaRotaProps) {
         zoom={14}
         options={{
           streetViewControl: false,
-          fullscreenControl: false,
-          zoomControl: true,
+          // Sem botões +/- de zoom; no lugar, o botão de tela cheia (canto inf. dir.).
+          zoomControl: false,
+          fullscreenControl: true,
+          fullscreenControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_BOTTOM,
+          },
           clickableIcons: false,
           gestureHandling: 'greedy',
           mapTypeControl: false,
