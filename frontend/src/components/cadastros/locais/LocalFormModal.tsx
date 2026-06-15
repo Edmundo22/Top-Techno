@@ -12,7 +12,7 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
 import { Modal } from '../../ui/Modal';
-import { LayersIcon, PinIcon, PolygonOutlineIcon, TrashIcon, UndoIcon } from '../../ui/icons';
+import { LayersIcon, PinIcon, PolygonOutlineIcon, TrashIcon } from '../../ui/icons';
 import { MAP_LIBRARIES } from '../../../services/googleMaps';
 import type { LocalDTO, LocalUpsertBody } from '../../../services/locaisApi';
 import {
@@ -133,7 +133,6 @@ export function LocalFormModal({
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const drawRef = useRef<TerraDraw | null>(null);
-  const polygonModeRef = useRef<TerraDrawPolygonMode | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
@@ -225,31 +224,6 @@ export function LocalFormModal({
 
     const init = () => {
       if (disposed) return;
-      const polygonMode = new TerraDrawPolygonMode({
-        showCoordinatePoints: true,
-        styles: {
-          fillColor: NEW_COLOR,
-          // Sem preenchimento enquanto desenha; o fill só aparece ao fechar o anel.
-          fillOpacity: (feature: GeoJSONStoreFeatures) =>
-            feature.properties.currentlyDrawing ? 0 : 0.4,
-          outlineColor: NEW_COLOR,
-          outlineWidth: 2,
-          // Bolinhas dos vértices só durante o desenho (depois o select mode
-          // mostra os pontos editáveis ao selecionar o polígono).
-          coordinatePointColor: '#ffffff',
-          coordinatePointWidth: 5,
-          coordinatePointOutlineColor: NEW_COLOR,
-          coordinatePointOutlineWidth: 2,
-          coordinatePointOpacity: (feature: GeoJSONStoreFeatures) =>
-            feature.properties.currentlyDrawing ? 1 : 0,
-          closingPointColor: NEW_COLOR,
-          closingPointWidth: 6,
-          closingPointOutlineColor: '#ffffff',
-          closingPointOutlineWidth: 2,
-        },
-      });
-      polygonModeRef.current = polygonMode;
-
       const draw = new TerraDraw({
         adapter: new TerraDrawGoogleMapsAdapter({
           lib: google.maps,
@@ -265,7 +239,14 @@ export function LocalFormModal({
               pointOutlineWidth: 2,
             },
           }),
-          polygonMode,
+          new TerraDrawPolygonMode({
+            styles: {
+              fillColor: NEW_COLOR,
+              fillOpacity: 0.4,
+              outlineColor: NEW_COLOR,
+              outlineWidth: 2,
+            },
+          }),
           new TerraDrawSelectMode({
             flags: {
               point: { feature: { draggable: true } },
@@ -303,20 +284,12 @@ export function LocalFormModal({
       });
 
       // 'finish' cobre desenho concluído e arraste (feature/vértice). Sincroniza
-      // e, ao concluir um desenho, volta para o modo de seleção. Polígono recém
-      // fechado já entra selecionado, pronto para ajustar os vértices.
-      draw.on('finish', (id, context) => {
+      // e, ao concluir um desenho, volta para o modo de seleção.
+      draw.on('finish', (_id, context) => {
         syncFromStore();
         if (context.action === 'draw') {
           draw.setMode('select');
           setDrawMode('select');
-          if (context.mode === 'polygon') {
-            try {
-              draw.selectFeature(id);
-            } catch (err) {
-              logError('terra-draw selectFeature', err);
-            }
-          }
         }
       });
       // exclusões (de feature ou de vértice) não disparam 'finish'
@@ -342,7 +315,6 @@ export function LocalFormModal({
         logError('terra-draw stop', err);
       }
       drawRef.current = null;
-      polygonModeRef.current = null;
       setDrawReady(false);
     };
   }, [open, isLoaded, map, isEdit, initial, syncFromStore]);
@@ -435,11 +407,6 @@ export function LocalFormModal({
   const startPoint = useCallback(() => applyMode('point'), [applyMode]);
   const startPolygon = useCallback(() => applyMode('polygon'), [applyMode]);
   const cancelDraw = useCallback(() => applyMode('select'), [applyMode]);
-  // Remove o último vértice colocado no polígono em desenho (undo do mode).
-  const undoLastVertex = useCallback(() => {
-    const mode = polygonModeRef.current;
-    if (mode && mode.undoSize() > 0) mode.undo();
-  }, []);
   const clearCircle = useCallback(() => {
     const draw = drawRef.current;
     if (draw) {
@@ -566,12 +533,11 @@ export function LocalFormModal({
               posicionar o ponto (latitude/longitude). O raio vem do campo acima.
             </p>
             <p className="mt-1">
-              <strong>Recomendado:</strong> clique em “Desenhar polígono” e toque no mapa para
-              adicionar os vértices (errou? use “Apagar último ponto”). Feche clicando no primeiro
-              ponto (ou duplo-clique) — só aí aparece o preenchimento.
+              <strong>Recomendado:</strong> clique em “Desenhar polígono”, toque no mapa para
+              adicionar os vértices e clique no primeiro ponto (ou duplo-clique) para fechar.
             </p>
             <p className="mt-1">
-              Depois de fechado, clique no polígono e arraste cada vértice para ajustar.
+              Para ajustar, clique no desenho e arraste os vértices (Terra Draw).
             </p>
             {!poligonoWkt && (
               <p className="mt-2 text-amber-700">⚠ Recomendamos cadastrar o polígono do local.</p>
@@ -626,24 +592,14 @@ export function LocalFormModal({
                 Apagar polígono
               </button>
             ) : drawingPolygon ? (
-              <>
-                <button
-                  type="button"
-                  onClick={undoLastVertex}
-                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
-                >
-                  <UndoIcon className="h-3.5 w-3.5" />
-                  Apagar último ponto
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelDraw}
-                  className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
-                >
-                  <TrashIcon className="h-3.5 w-3.5" />
-                  Cancelar desenho
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={cancelDraw}
+                className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
+              >
+                <PolygonOutlineIcon className="h-3.5 w-3.5" />
+                Fechando no 1º ponto / duplo-clique (cancelar)
+              </button>
             ) : (
               <button
                 type="button"
