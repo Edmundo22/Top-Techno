@@ -26,6 +26,7 @@ import { logError } from '../../../utils/logger';
 const NEW_COLOR = '#dc2626' as const; // vermelho — círculo/polígono novos
 const EDIT_CIRCLE_COLOR = '#f97316' as const; // laranja — ponto/círculo quando em edição
 const OTHER_COLOR = '#16a34a' as const; // verde — camada "Todos os Locais"
+const CLOSED_COLOR = '#16a34a' as const; // verde — polígono já fechado (pronto p/ editar)
 const DRAW_BUTTON_BASE =
   'inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50';
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
@@ -80,15 +81,7 @@ function escape(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-// GeoJSON do Terra Draw usa [lng, lat]; o ponto/polígono carregam properties.mode.
-function pointFeature(lng: number, lat: number): GeoJSONStoreFeatures {
-  return {
-    type: 'Feature',
-    properties: { mode: 'point' },
-    geometry: { type: 'Point', coordinates: [lng, lat] },
-  } as GeoJSONStoreFeatures;
-}
-
+// GeoJSON do Terra Draw usa [lng, lat]; o polígono carrega properties.mode.
 function polygonFeature(ring: LatLngLiteral[]): GeoJSONStoreFeatures {
   const coords = ring.map((p) => [p.lng, p.lat]);
   const first = coords[0];
@@ -134,6 +127,7 @@ export function LocalFormModal({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const drawRef = useRef<TerraDraw | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
 
@@ -177,27 +171,20 @@ export function LocalFormModal({
     setError(null);
   }, [open, initial]);
 
-  // -------- Lê o store do Terra Draw e reflete no estado (centro + WKT do polígono)
+  // -------- Lê o polígono do store do Terra Draw e reflete no WKT.
+  // O centro (circleState) NÃO é tocado aqui — ele é overlay imperativo e só
+  // muda ao posicionar ou apagar, nunca por clique no mapa.
   const syncFromStore = useCallback(() => {
     const draw = drawRef.current;
     if (!draw) return;
-    const features = draw.getSnapshot();
-    const points = features.filter((f) => f.geometry.type === 'Point');
-    const polygons = features.filter((f) => f.geometry.type === 'Polygon');
+    const polygons = draw.getSnapshot().filter((f) => f.geometry.type === 'Polygon');
 
-    // garante no máximo 1 ponto e 1 polígono — mantém o último de cada
-    const extras = [...points.slice(0, -1), ...polygons.slice(0, -1)]
+    // garante no máximo 1 polígono — mantém o último
+    const extras = polygons
+      .slice(0, -1)
       .map((f) => f.id)
       .filter((id): id is string | number => id != null);
     if (extras.length) draw.removeFeatures(extras);
-
-    const point = points[points.length - 1];
-    if (point && point.geometry.type === 'Point') {
-      const [lng, lat] = point.geometry.coordinates as [number, number];
-      setCircleState({ lat, lng });
-    } else {
-      setCircleState(null);
-    }
 
     const polygon = polygons[polygons.length - 1];
     if (polygon && polygon.geometry.type === 'Polygon') {
@@ -219,6 +206,7 @@ export function LocalFormModal({
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
     let projectionListener: google.maps.MapsEventListener | null = null;
+    let rightClickListener: google.maps.MapsEventListener | null = null;
     let disposed = false;
     const pointColor = isEdit ? EDIT_CIRCLE_COLOR : NEW_COLOR;
 
@@ -241,9 +229,12 @@ export function LocalFormModal({
           }),
           new TerraDrawPolygonMode({
             styles: {
-              fillColor: NEW_COLOR,
+              // vermelho enquanto desenha; verde depois de fechado (editável)
+              fillColor: (feature: GeoJSONStoreFeatures) =>
+                feature.properties.currentlyDrawing ? NEW_COLOR : CLOSED_COLOR,
               fillOpacity: 0.4,
-              outlineColor: NEW_COLOR,
+              outlineColor: (feature: GeoJSONStoreFeatures) =>
+                feature.properties.currentlyDrawing ? NEW_COLOR : CLOSED_COLOR,
               outlineWidth: 2,
             },
           }),
@@ -268,9 +259,7 @@ export function LocalFormModal({
 
       draw.on('ready', () => {
         if (disposed) return;
-        if (initial?.latitude != null && initial?.longitude != null) {
-          draw.addFeatures([pointFeature(initial.longitude, initial.latitude)]);
-        }
+        // O centro NÃO entra no Terra Draw (vira overlay imperativo); só o polígono.
         if (initial?.poligonoWkt) {
           try {
             draw.addFeatures([polygonFeature(parseWktPolygon(initial.poligonoWkt))]);
@@ -283,18 +272,53 @@ export function LocalFormModal({
         setDrawReady(true);
       });
 
-      // 'finish' cobre desenho concluído e arraste (feature/vértice). Sincroniza
-      // e, ao concluir um desenho, volta para o modo de seleção.
-      draw.on('finish', (_id, context) => {
+      draw.on('finish', (id, context) => {
+        // Ponto (centro): captura a coordenada e REMOVE do Terra Draw. O centro
+        // passa a ser overlay imperativo (marker + círculo do raio), que clique
+        // nenhum do mapa pode mover/apagar — só o botão "Apagar círculo" limpa.
+        if (context.mode === 'point') {
+          const feat = draw.getSnapshotFeature(id);
+          if (feat && feat.geometry.type === 'Point') {
+            const [lng, lat] = feat.geometry.coordinates as [number, number];
+            setCircleState({ lat, lng });
+          }
+          const pointIds = draw
+            .getSnapshot()
+            .filter((f) => f.geometry.type === 'Point')
+            .map((f) => f.id)
+            .filter((pid): pid is string | number => pid != null);
+          if (pointIds.length) draw.removeFeatures(pointIds);
+          draw.setMode('select');
+          setDrawMode('select');
+          return;
+        }
+        // Polígono: concluído (desenho/right-click) ou arraste de vértice.
         syncFromStore();
         if (context.action === 'draw') {
           draw.setMode('select');
           setDrawMode('select');
+          if (context.mode === 'polygon') {
+            // já entra selecionado, com os vértices prontos para edição
+            try {
+              draw.selectFeature(id);
+            } catch (err) {
+              logError('terra-draw selectFeature', err);
+            }
+          }
         }
       });
       // exclusões (de feature ou de vértice) não disparam 'finish'
       draw.on('change', (_ids, type) => {
         if (type === 'delete') syncFromStore();
+      });
+
+      // Right-click fecha o polígono em desenho (a partir do 3º vértice). O
+      // Terra Draw fecha pela tecla de "finish" (Enter) e o adapter escuta keyup
+      // no getDiv(); então disparamos um Enter ali. O close() do mode valida o
+      // número de vértices internamente (não fecha com menos de 3).
+      rightClickListener = google.maps.event.addListener(map, 'rightclick', () => {
+        if (drawRef.current?.getMode() !== 'polygon') return;
+        map.getDiv().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
       });
 
       draw.start();
@@ -309,6 +333,7 @@ export function LocalFormModal({
     return () => {
       disposed = true;
       projectionListener?.remove();
+      rightClickListener?.remove();
       try {
         drawRef.current?.stop();
       } catch (err) {
@@ -319,15 +344,32 @@ export function LocalFormModal({
     };
   }, [open, isLoaded, map, isEdit, initial, syncFromStore]);
 
-  // -------- Círculo do raio (visual): reflete circleState + form.raio
+  // -------- Centro + círculo do raio (overlay imperativo): refletem circleState
+  // + form.raio. clickable:false — nada no mapa interage com eles.
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
     circleRef.current?.setMap(null);
+    markerRef.current?.setMap(null);
     circleRef.current = null;
+    markerRef.current = null;
     if (!circleState) return;
     const radius = Number(form.raio);
     const validRadius = Number.isFinite(radius) && radius > 0 ? radius : 0;
     const color = isEdit ? EDIT_CIRCLE_COLOR : NEW_COLOR;
+    markerRef.current = new google.maps.Marker({
+      map,
+      position: circleState,
+      clickable: false,
+      icon: {
+        path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      },
+      zIndex: 6,
+    });
     circleRef.current = new google.maps.Circle({
       map,
       center: circleState,
@@ -393,7 +435,9 @@ export function LocalFormModal({
   useEffect(() => {
     if (open) return;
     circleRef.current?.setMap(null);
+    markerRef.current?.setMap(null);
     circleRef.current = null;
+    markerRef.current = null;
     outrosInfoRef.current?.close();
     outrosPolygonsRef.current.forEach((p) => p.setMap(null));
     outrosPolygonsRef.current = [];
@@ -533,11 +577,12 @@ export function LocalFormModal({
               posicionar o ponto (latitude/longitude). O raio vem do campo acima.
             </p>
             <p className="mt-1">
-              <strong>Recomendado:</strong> clique em “Desenhar polígono”, toque no mapa para
-              adicionar os vértices e clique no primeiro ponto (ou duplo-clique) para fechar.
+              <strong>Recomendado:</strong> clique em “Desenhar polígono” e toque no mapa para
+              adicionar os vértices. A partir do 3º vértice, <strong>clique com o botão direito</strong>{' '}
+              (ou no primeiro ponto) para fechar — ele fica <span className="text-green-700">verde</span>.
             </p>
             <p className="mt-1">
-              Para ajustar, clique no desenho e arraste os vértices (Terra Draw).
+              Depois de fechado, clique no polígono e arraste os vértices para ajustar o formato.
             </p>
             {!poligonoWkt && (
               <p className="mt-2 text-amber-700">⚠ Recomendamos cadastrar o polígono do local.</p>
