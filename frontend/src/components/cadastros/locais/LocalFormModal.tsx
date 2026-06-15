@@ -5,6 +5,7 @@ import { Input } from '../../ui/Input';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
 import { Modal } from '../../ui/Modal';
 import {
+  CheckCircleIcon,
   LayersIcon,
   PinIcon,
   PolygonOutlineIcon,
@@ -29,6 +30,8 @@ const DRAW_BUTTON_BASE =
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 
 const containerStyle = { width: '100%', height: '100%' };
+
+type DrawMode = 'circle' | 'polygon' | null;
 
 interface FormState {
   codigoPonto: string;
@@ -97,17 +100,21 @@ export function LocalFormModal({
     lng: number;
   } | null>(null);
   const [poligonoWkt, setPoligonoWkt] = useState<string | null>(null);
+  // Desenho manual (o DrawingManager foi removido do Maps JS API na v3.65).
+  const [drawMode, setDrawMode] = useState<DrawMode>(null);
+  const [drawingPath, setDrawingPath] = useState<LatLngLiteral[]>([]);
   const [showOutros, setShowOutros] = useState(false);
   const [showPois, setShowPois] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
   const polygonListenersRef = useRef<google.maps.MapsEventListener[]>([]);
+  const drawPreviewRef = useRef<google.maps.Polygon | null>(null);
+  const drawVertexMarkersRef = useRef<google.maps.Marker[]>([]);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
 
@@ -132,77 +139,77 @@ export function LocalFormModal({
       setCircleState(null);
       setPoligonoWkt(null);
     }
+    setDrawMode(null);
+    setDrawingPath([]);
     setShowOutros(false);
     setError(null);
   }, [open, initial]);
 
-  // -------- DrawingManager
+  // -------- Cursor de mira enquanto desenha
+  useEffect(() => {
+    if (!map) return;
+    map.setOptions({ draggableCursor: drawMode ? 'crosshair' : null });
+  }, [map, drawMode]);
+
+  // -------- Clique no mapa: posiciona o centro (círculo) ou adiciona vértice (polígono)
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
+      const point = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      if (drawMode === 'circle') {
+        setCircleState(point);
+        setDrawMode(null);
+      } else if (drawMode === 'polygon') {
+        setDrawingPath((prev) => [...prev, point]);
+      }
+    },
+    [drawMode],
+  );
+
+  // -------- Preview do polígono em desenho (vértices clicados + bolinhas)
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
-    const dm = new google.maps.drawing.DrawingManager({
+    drawPreviewRef.current?.setMap(null);
+    drawPreviewRef.current = null;
+    drawVertexMarkersRef.current.forEach((m) => m.setMap(null));
+    drawVertexMarkersRef.current = [];
+    if (drawMode !== 'polygon' || drawingPath.length === 0) return;
+    const preview = new google.maps.Polygon({
       map,
-      drawingControl: false,
-      drawingMode: null,
-      circleOptions: {
-        fillColor: NEW_COLOR,
-        fillOpacity: 0.75,
-        strokeColor: NEW_COLOR,
-        strokeWeight: 2,
-        clickable: false,
-        editable: false,
-        zIndex: 40,
-      },
-      polygonOptions: {
-        fillColor: NEW_COLOR,
-        fillOpacity: 0.75,
-        strokeColor: NEW_COLOR,
-        strokeWeight: 2,
-        editable: true,
-        zIndex: 35,
-      },
+      paths: drawingPath,
+      strokeColor: NEW_COLOR,
+      strokeOpacity: 0.95,
+      strokeWeight: 2,
+      fillColor: NEW_COLOR,
+      fillOpacity: 0.3,
+      clickable: false, // deixa o clique atravessar pro mapa (adicionar vértice)
+      zIndex: 30,
     });
-    drawingManagerRef.current = dm;
-
-    const circleListener = google.maps.event.addListener(
-      dm,
-      'circlecomplete',
-      (drawn: google.maps.Circle) => {
-        const center = drawn.getCenter();
-        if (!center) {
-          drawn.setMap(null);
-          return;
-        }
-        drawn.setMap(null);
-        setCircleState({ lat: center.lat(), lng: center.lng() });
-        dm.setDrawingMode(null);
-      },
+    drawPreviewRef.current = preview;
+    drawVertexMarkersRef.current = drawingPath.map(
+      (pt, i) =>
+        new google.maps.Marker({
+          map,
+          position: pt,
+          clickable: false,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: i === 0 ? 6 : 4,
+            fillColor: '#ffffff',
+            fillOpacity: 1,
+            strokeColor: NEW_COLOR,
+            strokeWeight: 2,
+          },
+          zIndex: 45,
+        }),
     );
-
-    const polyListener = google.maps.event.addListener(
-      dm,
-      'polygoncomplete',
-      (drawn: google.maps.Polygon) => {
-        const path = drawn.getPath();
-        try {
-          const literal = pathFromGoogleLatLngs(path);
-          setPoligonoWkt(pathToWktPolygon(literal));
-        } catch (err) {
-          logError('pathToWktPolygon drawing', err);
-          drawn.setMap(null);
-          return;
-        }
-        drawn.setMap(null);
-        dm.setDrawingMode(null);
-      },
-    );
-
     return () => {
-      google.maps.event.removeListener(circleListener);
-      google.maps.event.removeListener(polyListener);
-      dm.setMap(null);
-      drawingManagerRef.current = null;
+      drawPreviewRef.current?.setMap(null);
+      drawPreviewRef.current = null;
+      drawVertexMarkersRef.current.forEach((m) => m.setMap(null));
+      drawVertexMarkersRef.current = [];
     };
-  }, [open, isLoaded, map]);
+  }, [open, isLoaded, map, drawMode, drawingPath]);
 
   // -------- Marker + Circle estáveis (refletem circleState + form.raio)
   useEffect(() => {
@@ -218,6 +225,7 @@ export function LocalFormModal({
     const marker = new google.maps.Marker({
       map,
       position: circleState,
+      clickable: false,
       icon: {
         path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
         scale: 5,
@@ -292,7 +300,7 @@ export function LocalFormModal({
       polygonRef.current = null;
     };
     // poligonoWkt é a fonte da verdade; reconstruímos toda vez que ele muda
-    // (set via desenho/edição do próprio polygon → re-render do efeito).
+    // (set via conclusão do desenho/edição do próprio polygon → re-render do efeito).
   }, [open, isLoaded, map, poligonoWkt]);
 
   // -------- Camada "Todos os Locais" (verde, omitindo o registro em edição)
@@ -348,27 +356,51 @@ export function LocalFormModal({
     circleRef.current?.setMap(null);
     markerRef.current?.setMap(null);
     polygonRef.current?.setMap(null);
+    drawPreviewRef.current?.setMap(null);
+    drawVertexMarkersRef.current.forEach((m) => m.setMap(null));
     outrosInfoRef.current?.close();
     outrosPolygonsRef.current.forEach((p) => p.setMap(null));
     circleRef.current = null;
     markerRef.current = null;
     polygonRef.current = null;
+    drawPreviewRef.current = null;
+    drawVertexMarkersRef.current = [];
     outrosPolygonsRef.current = [];
   }, [open]);
 
   // -------- Handlers de desenho
   const startCircle = useCallback(() => {
-    drawingManagerRef.current?.setDrawingMode(google.maps.drawing.OverlayType.CIRCLE);
+    setDrawMode('circle');
   }, []);
   const startPolygon = useCallback(() => {
-    drawingManagerRef.current?.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    setDrawingPath([]);
+    setDrawMode('polygon');
+  }, []);
+  const finishPolygon = useCallback(() => {
+    if (drawingPath.length >= 3) {
+      try {
+        setPoligonoWkt(pathToWktPolygon(drawingPath));
+      } catch (err) {
+        logError('pathToWktPolygon finish', err);
+      }
+    }
+    setDrawingPath([]);
+    setDrawMode(null);
+  }, [drawingPath]);
+  const undoLastVertex = useCallback(() => {
+    setDrawingPath((path) => path.slice(0, -1));
+  }, []);
+  const cancelDrawing = useCallback(() => {
+    setDrawingPath([]);
+    setDrawMode(null);
   }, []);
   const clearCircle = useCallback(() => {
-    drawingManagerRef.current?.setDrawingMode(null);
+    setDrawMode(null);
     setCircleState(null);
   }, []);
   const clearPolygon = useCallback(() => {
-    drawingManagerRef.current?.setDrawingMode(null);
+    setDrawMode(null);
+    setDrawingPath([]);
     setPoligonoWkt(null);
   }, []);
 
@@ -411,8 +443,8 @@ export function LocalFormModal({
     }
   };
 
-  const drawingCircle = drawingManagerRef.current?.getDrawingMode() === 'circle';
-  const drawingPolygon = drawingManagerRef.current?.getDrawingMode() === 'polygon';
+  const drawingCircle = drawMode === 'circle';
+  const drawingPolygon = drawMode === 'polygon';
 
   return (
     <Modal
@@ -465,10 +497,12 @@ export function LocalFormModal({
 
           <div className="mt-2 rounded-md border border-brand-line bg-brand-line-soft p-3 text-[11px] text-brand-ink-muted">
             <p>
-              <strong>Obrigatório:</strong> desenhar o círculo (define latitude/longitude e raio).
+              <strong>Obrigatório:</strong> clique em “Desenhar círculo” e toque no mapa para
+              posicionar o ponto (latitude/longitude). O raio vem do campo acima.
             </p>
             <p className="mt-1">
-              <strong>Recomendado:</strong> também desenhar o polígono da área do local.
+              <strong>Recomendado:</strong> clique em “Desenhar polígono”, toque no mapa para
+              adicionar os vértices (mín. 3) e clique em “Concluir”.
             </p>
             {!poligonoWkt && (
               <p className="mt-2 text-amber-700">⚠ Recomendamos cadastrar o polígono do local.</p>
@@ -493,11 +527,20 @@ export function LocalFormModal({
                 <TrashIcon className="h-3.5 w-3.5" />
                 Apagar círculo / marker
               </button>
+            ) : drawingCircle ? (
+              <button
+                type="button"
+                onClick={cancelDrawing}
+                className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
+              >
+                <PinIcon className="h-3.5 w-3.5" />
+                Clique no mapa… (cancelar)
+              </button>
             ) : (
               <button
                 type="button"
                 onClick={startCircle}
-                disabled={!isLoaded || drawingCircle}
+                disabled={!isLoaded}
                 className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
               >
                 <PinIcon className="h-3.5 w-3.5" />
@@ -513,11 +556,38 @@ export function LocalFormModal({
                 <TrashIcon className="h-3.5 w-3.5" />
                 Apagar polígono
               </button>
+            ) : drawingPolygon ? (
+              <>
+                <button
+                  type="button"
+                  onClick={finishPolygon}
+                  disabled={drawingPath.length < 3}
+                  className={`${DRAW_BUTTON_BASE} border border-green-600 bg-green-50 text-green-800 hover:bg-green-100`}
+                >
+                  <CheckCircleIcon className="h-3.5 w-3.5" />
+                  Concluir ({drawingPath.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={undoLastVertex}
+                  disabled={drawingPath.length === 0}
+                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
+                >
+                  Desfazer ponto
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelDrawing}
+                  className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
+                >
+                  Cancelar
+                </button>
+              </>
             ) : (
               <button
                 type="button"
                 onClick={startPolygon}
-                disabled={!isLoaded || drawingPolygon}
+                disabled={!isLoaded}
                 className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
               >
                 <PolygonOutlineIcon className="h-3.5 w-3.5" />
@@ -564,7 +634,9 @@ export function LocalFormModal({
                     clickableIcons: false,
                     gestureHandling: 'greedy',
                     mapTypeControl: true,
+                    disableDoubleClickZoom: true,
                   }}
+                  onClick={handleMapClick}
                   onLoad={(m) => setMap(m)}
                   onUnmount={() => setMap(null)}
                 />

@@ -1,6 +1,6 @@
 # components/cadastros/locais
 
-Componentes da tela `/cadastros/locais`: tabela com ordenação/filtros, mapa lateral, modal de cadastro/edição com ferramentas de desenho (DrawingManager), confirmação de exclusão.
+Componentes da tela `/cadastros/locais`: tabela com ordenação/filtros, mapa lateral, modal de cadastro/edição com ferramentas de desenho manuais (clique no mapa), confirmação de exclusão.
 
 ## Arquitetura
 
@@ -42,17 +42,20 @@ Modal cobrindo criação e edição. Edição pré-popula form, círculo (cor la
 ### Estado interno
 - `form` — `{ codigoPonto, endereco, raio, pontoParada }` (string).
 - `circleState` — `{ lat, lng } | null`. Raio vem do input `form.raio`, não do círculo desenhado.
-- `poligonoWkt` — `string | null` em formato `POLYGON((lng lat, ...))`. Atualizado tanto ao desenhar quanto a cada edição de path (`set_at`/`insert_at`/`remove_at`).
+- `poligonoWkt` — `string | null` em formato `POLYGON((lng lat, ...))`. Atualizado tanto ao concluir o desenho quanto a cada edição de path (`set_at`/`insert_at`/`remove_at`).
+- `drawMode` — `'circle' | 'polygon' | null`. Modo de desenho ativo.
+- `drawingPath` — `LatLngLiteral[]`. Vértices clicados do polígono **em andamento** (antes de "Concluir").
 - `showOutros` — toggle da camada verde "Todos os Locais" (omite o registro em edição).
 - `saving`, `error`.
 
-### DrawingManager
+### Desenho manual (sem DrawingManager)
 
-Um `DrawingManager` por modal, criado no `useEffect` quando map e isLoaded estão prontos. `drawingControl: false` — controlamos modos com botões customizados.
+O `DrawingManager` foi **removido do Maps JS API na v3.65** ([deprecations](https://developers.google.com/maps/deprecations)). Instanciá-lo lançava `Error: The DrawingManager functionality ... is no longer available` e deixava o modal em tela branca. O desenho agora é feito à mão, via `onClick` do `<GoogleMap>` (`handleMapClick`):
 
-Listeners `circlecomplete` e `polygoncomplete`:
-- O círculo desenhado é **descartado** (`setMap(null)`) — usamos só o centro. O círculo "visível" é reconstruído em outro `useEffect` a partir de `circleState + form.raio` (assim qualquer mudança no input de raio atualiza o desenho).
-- O polígono desenhado também é descartado — reconstruído a partir de `poligonoWkt`, com listeners no `path` para refletir edições no estado.
+- **Círculo**: como o raio vem do input, só precisamos do **centro** — um clique no mapa em `drawMode === 'circle'` define `circleState` e sai do modo. O círculo "visível" é reconstruído em outro `useEffect` a partir de `circleState + form.raio` (qualquer mudança no raio atualiza o desenho).
+- **Polígono**: em `drawMode === 'polygon'`, cada clique adiciona um vértice a `drawingPath`. Um `useEffect` desenha o preview (polígono `fillOpacity 0.3` + bolinhas brancas nos vértices, todos `clickable:false` para o clique atravessar até o mapa). Botões **Concluir** (≥3 vértices → `pathToWktPolygon` → `poligonoWkt`), **Desfazer ponto** e **Cancelar**. Concluído, o polígono editável definitivo é reconstruído a partir de `poligonoWkt` (com listeners `set_at`/`insert_at`/`remove_at`).
+
+`disableDoubleClickZoom: true` evita zoom acidental ao clicar rápido; o cursor vira `crosshair` enquanto `drawMode` está ativo. A biblioteca `drawing` foi removida de `MAP_LIBRARIES` ([services/googleMaps.ts](../../../services/googleMaps.ts)).
 
 ### Validação
 
