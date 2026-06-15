@@ -320,6 +320,20 @@ export function RefreshIcon(props: IconProps) {
   );
 }
 
+export function UndoIcon(props: IconProps) {
+  return (
+    <svg {...baseProps} {...props}>
+      <path
+        d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // Mesmo path SVG do veículo no mapa (Material `directions_car`). Recebe a cor
 // via `color` para casar com `pickVeiculoColor` da MapaMonitoramento.
 export function CarLegendIcon({ color, ...props }: IconProps & { color: string }) {
