@@ -6,5 +6,6 @@
 //
 // `drawing` foi removida: o DrawingManager saiu do Maps JS API na v3.65
 // (https://developers.google.com/maps/deprecations). O desenho de
-// círculo/polígono no cadastro de locais agora é manual (clique no mapa).
+// círculo/polígono no cadastro de locais agora usa o Terra Draw
+// (terra-draw + terra-draw-google-maps-adapter).
 export const MAP_LIBRARIES: 'geometry'[] = ['geometry'];

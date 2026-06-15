@@ -2285,6 +2285,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"terra-draw-google-maps-adapter@npm:^1.6.1":
+  version: 1.6.1
+  resolution: "terra-draw-google-maps-adapter@npm:1.6.1"
+  peerDependencies:
+    "@googlemaps/js-api-loader": ^1.14.3 || ^2.0.0
+    terra-draw: ^1.0.0
+  checksum: 10c0/8c19467876ee479594a904c5f5a1ece3ff53c572285c878b88b686a5ce22311ff89c1d35c4c8221a173eabe868c5720789593939ca625258f5b496e348debf73
+  languageName: node
+  linkType: hard
+
+"terra-draw@npm:^1.31.1":
+  version: 1.31.1
+  resolution: "terra-draw@npm:1.31.1"
+  checksum: 10c0/01f4b33de5322e97fc99e44b8737a44e2e8f33b219b12df5fe24aaf0b19d1940c9800699fb5185b7353f825a4e729bc713ea1f0fd5da5cc38dc7e410faf59ad1
+  languageName: node
+  linkType: hard
+
 "thenify-all@npm:^1.0.0":
   version: 1.6.0
   resolution: "thenify-all@npm:1.6.0"
@@ -2338,6 +2355,8 @@ __metadata:
     react-dom: "npm:^18.3.1"
     react-router-dom: "npm:^6.27.0"
     tailwindcss: "npm:^3.4.14"
+    terra-draw: "npm:^1.31.1"
+    terra-draw-google-maps-adapter: "npm:^1.6.1"
     typescript: "npm:^5.6.3"
     vite: "npm:^5.4.11"
   languageName: unknown
