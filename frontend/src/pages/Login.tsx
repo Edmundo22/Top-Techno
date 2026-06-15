@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { EyeIcon, EyeOffIcon } from '../components/ui/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { extractErrorMessage } from '../services/api';
 
@@ -10,6 +11,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [showSenha, setShowSenha] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,16 +87,32 @@ export function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nome@empresa.com"
             />
-            <Input
-              label="Senha"
-              name="senha"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <Input
+                label="Senha"
+                name="senha"
+                type={showSenha ? 'text' : 'password'}
+                autoComplete="current-password"
+                required
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="••••••••"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSenha((v) => !v)}
+                aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showSenha}
+                className="absolute bottom-0 right-0 grid h-10 w-10 place-items-center rounded-r-lg text-brand-ink-muted transition-colors hover:text-brand-ink focus:outline-none focus-visible:text-brand-ink"
+              >
+                {showSenha ? (
+                  <EyeOffIcon className="h-5 w-5" />
+                ) : (
+                  <EyeIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (
