@@ -262,8 +262,8 @@ export function MotoristaPorRotaPage() {
 
         {/* Coluna direita — vínculo motorista↔rota */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 lg:basis-[55%]">
-          {/* Rota + mini-mapa — 1/3 da altura */}
-          <div className="min-h-0 basis-1/3">
+          {/* Rota + mini-mapa — 2/5 da altura */}
+          <div className="min-h-0 basis-2/5">
             <RotaSelectMapCard
               rotas={rotas}
               loading={rotasLoading}
@@ -272,8 +272,8 @@ export function MotoristaPorRotaPage() {
             />
           </div>
 
-          {/* Vinculados (mais largo) + Disponíveis (mais estreito) lado a lado — 2/3 */}
-          <div className="min-h-0 basis-2/3">
+          {/* Vinculados (mais largo) + Disponíveis (mais estreito) lado a lado — 3/5 */}
+          <div className="min-h-0 basis-3/5">
             {selectedIdFt == null ? (
               <div className="grid h-full place-items-center rounded-card border border-dashed border-brand-line bg-brand-line-soft/40 p-6 text-center text-sm text-brand-ink-muted">
                 Selecione uma rota para gerenciar os motoristas vinculados.

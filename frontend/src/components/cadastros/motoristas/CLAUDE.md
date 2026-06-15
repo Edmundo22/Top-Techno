@@ -14,14 +14,14 @@ MotoristaPorRota.tsx (page) — dona de TODO o estado
   │    ├─ MotoristaFormModal   ← criação/edição (mesmo componente, prop `initial`)
   │    └─ Modal (confirmar exclusão)
   └─ Coluna direita (vínculo, só com rota selecionada)
-       ├─ RotaSelectMapCard    ← <select> de rotas + MapaRota (mini-mapa)  [1/3 da altura]
-       ├─ Linha [2/3 da altura], dois cards lado a lado:
+       ├─ RotaSelectMapCard    ← <select> de rotas + MapaRota (mini-mapa)  [2/5 da altura]
+       ├─ Linha [3/5 da altura], dois cards lado a lado:
        │    ├─ VinculadosTable  ← vinculados + checkbox TITULAR + desvincular  [~60% largura]
        │    └─ DisponiveisCard  ← lista de não-vinculados + "Vincular selecionados"  [~40%]
        └─ Modal (confirmar desvincular)
 ```
 
-A coluna direita usa `basis-1/3` (rota/mapa) + `basis-2/3` (linha de vínculos). Os
+A coluna direita usa `basis-2/5` (rota/mapa) + `basis-3/5` (linha de vínculos). Os
 cards preenchem a altura (`h-full min-h-0`); o mini-mapa é `flex-1` dentro do card.
 
 ## Estado (tudo na página)
@@ -37,8 +37,9 @@ refletir o dado novo/editado/removido sem trocar de rota.
 Clicar no checkbox de titular **não** aplica direto: abre um modal de confirmação
 (`confirmTitular`). A mensagem varia — "deixar X como titular", "trocar o X pelo Y"
 (quando já há titular) ou "remover X como titular" (ao desmarcar). Desvincular
-também confirma em modal. `MapaRota` esconde o zoom (+/-) e mostra o botão de tela
-cheia no canto inferior direito.
+também confirma em modal. `MapaRota` no modo pequeno esconde o zoom (+/-) e mostra
+só o botão de tela cheia (canto inf. dir.); em **tela cheia** (detectada via
+`fullscreenchange`) libera todos os controles padrão do Google Maps.
 
 `DisponiveisCard` é o único com estado local (Set de marcados); recebe
 `key={selectedIdFt}` para remontar e zerar a seleção ao trocar de rota.
