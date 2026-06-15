@@ -78,12 +78,10 @@ export class MonitoramentoRepository {
     // associada. TEM_ROTA = 1 só quando ambos existem — frontend usa para
     // separar veículos "com rota" (verde) de "sem rota" (preto).
     //
-    // O filtro de "hoje" usa `@today` em vez de `CAST(GETDATE() AS DATE)` para
-    // ficar independente do fuso do SQL Server. Cálculo no Node garante a data
-    // percebida pelo operador (sempre Brasília).
+    // Não filtra por DT_ULT_POSICAO: todo veículo com lat/lng aparece no mapa,
+    // tenha reportado hoje ou não. A viagem do dia usa CAST(GETDATE() AS DATE).
     const result = await pool
       .request()
-      .input('today', sql.VarChar(10), todayInBrazil())
       .query<VeiculoRow>(
         `SELECT
          v.ID_VEICULO, v.PLACA, v.LATITUDE, v.LONGITUDE,
@@ -97,10 +95,9 @@ export class MonitoramentoRepository {
          FROM [TOP_TECHNO].[dbo].[TB_VIAGEM] v2
          LEFT JOIN [TOP_TECHNO].[dbo].[FT_CABECALHO] ft ON ft.ID_FT = v2.ID_FT
          WHERE v2.ID_VEICULO = v.ID_VEICULO
-           AND CAST(v2.DT_VIAGEM AS DATE) = @today
+           AND CAST(v2.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)
        ) via
-       WHERE CAST(v.DT_ULT_POSICAO AS DATE) = @today
-         AND v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL`,
+       WHERE v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL`,
       );
     return result.recordset;
   }
