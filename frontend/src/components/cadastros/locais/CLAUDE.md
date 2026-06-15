@@ -41,7 +41,7 @@ Modal cobrindo criação e edição. Edição pré-popula form, círculo (cor la
 
 ### Estado interno
 - `form` — `{ codigoPonto, endereco, raio, pontoParada }` (string).
-- `circleState` — `{ lat, lng } | null`. Centro do local (= ponto no Terra Draw). Raio vem do input `form.raio`, não do desenho.
+- `circleState` — `{ lat, lng } | null`. Centro do local. **Não** é feature do Terra Draw — é overlay imperativo (marker + círculo), só muda ao posicionar ou apagar. Raio vem do input `form.raio`, não do desenho.
 - `poligonoWkt` — `string | null` em formato `POLYGON((lng lat, ...))`. Derivado do polígono do store do Terra Draw a cada `finish`/`delete`.
 - `drawMode` — `'point' | 'polygon' | 'select'`. Espelha o modo ativo do Terra Draw (`select` é o padrão: visualiza e permite editar).
 - `drawReady` — `boolean`. `true` após o evento `ready` do Terra Draw (libera os botões de desenho).
@@ -53,13 +53,13 @@ Modal cobrindo criação e edição. Edição pré-popula form, círculo (cor la
 
 O `DrawingManager` foi **removido do Maps JS API na v3.65** ([deprecations](https://developers.google.com/maps/deprecations)) — deprecado em ago/2025, indisponível desde mai/2026. Instanciá-lo lançava `Error: The DrawingManager functionality ... is no longer available` e deixava o modal em tela branca. O Google **não** forneceu substituto; usamos o **[Terra Draw](https://terradraw.io/)** (`terra-draw` + `terra-draw-google-maps-adapter`), o substituto de facto, que tem adapter para o Google Maps.
 
-O Terra Draw é dono das **vector features** (ponto + polígono); o React só reflete o store nele:
+O Terra Draw é dono apenas do **polígono**; o **centro/círculo é imperativo** (fora do Terra Draw). O React reflete o store do polígono:
 
-- **Init** (`useEffect` em `open/isLoaded/map`): cria `new TerraDraw({ adapter: TerraDrawGoogleMapsAdapter({ lib: google.maps, map, coordinatePrecision: 9 }), modes: [point, polygon, select] })`. Só instancia depois que a projeção do mapa está pronta (`getProjection()` ou `projection_changed`). No evento `ready`, carrega o ponto/polígono de `initial` via `addFeatures` (GeoJSON `[lng,lat]`, `properties.mode`), entra em `select` e marca `drawReady`.
-- **Círculo**: como o raio vem do input, só precisamos do **centro** → `TerraDrawPointMode`. O botão "Desenhar círculo" faz `setMode('point')`; o clique cria o ponto e o `finish` volta para `select`. Um `useEffect` à parte desenha o **círculo do raio** (overlay `google.maps.Circle`, `clickable:false`) a partir de `circleState + form.raio`.
-- **Polígono**: `TerraDrawPolygonMode` — botão "Desenhar polígono" → `setMode('polygon')`; fecha clicando no 1º ponto ou com duplo-clique. Edição (arrastar vértices, midpoints, deletar) é o `TerraDrawSelectMode` (modo padrão), sem listeners manuais.
-- **Sync**: `syncFromStore()` roda no `finish` (desenho concluído / arraste de feature ou vértice) e no `change` com `type === 'delete'`. Lê `getSnapshot()`, garante **no máximo 1 ponto e 1 polígono** (remove extras) e converte o anel do polígono (`[lng,lat]`) para WKT via `pathToWktPolygon` (que normaliza o anel e orienta CCW). **Não** sincroniza no `change` comum, para o WKT não ser setado no meio do desenho.
-- **Limpeza**: o cleanup do effect chama `draw.stop()`. A biblioteca `drawing` foi removida de `MAP_LIBRARIES` ([services/googleMaps.ts](../../../services/googleMaps.ts)).
+- **Init** (`useEffect` em `open/isLoaded/map`): cria `new TerraDraw({ adapter: TerraDrawGoogleMapsAdapter({ lib: google.maps, map, coordinatePrecision: 9 }), modes: [point, polygon, select] })`. Só instancia depois que a projeção do mapa está pronta (`getProjection()` ou `projection_changed`). No `ready`, carrega **só** o polígono de `initial` via `addFeatures`, entra em `select` e marca `drawReady`.
+- **Círculo (centro)**: o `TerraDrawPointMode` serve **só para capturar o clique** — o botão "Desenhar círculo" faz `setMode('point')`; no `finish` do ponto, lê a coordenada (`getSnapshotFeature`), seta `circleState` e **remove o ponto do store** (`removeFeatures`), voltando para `select`. A partir daí o centro é puramente overlay imperativo (marker + `google.maps.Circle` do raio, ambos `clickable:false`), então **clique nenhum do mapa o move ou apaga** — só o botão "Apagar círculo". (Isso corrige o bug em que vários cliques no mapa "moviam/sumiam" o círculo, porque ele era uma feature selecionável/arrastável.)
+- **Polígono**: `TerraDrawPolygonMode` — botão "Desenhar polígono" → `setMode('polygon')`. Fecha clicando no 1º ponto **ou com o botão direito** (a partir do 3º vértice): um listener de `rightclick` do mapa dispara um `keyup` de `Enter` no `map.getDiv()` (onde o adapter escuta teclado), e o `close()` do mode valida o nº de vértices. Enquanto desenha é **vermelho**; ao fechar fica **verde** (`fillColor`/`outlineColor` em função de `feature.properties.currentlyDrawing`) e já entra **selecionado** (`selectFeature`) para arrastar vértices/midpoints (`TerraDrawSelectMode`).
+- **Sync**: `syncFromStore()` (no `finish` de polígono e no `change` `type === 'delete'`) lê só os polígonos do `getSnapshot()`, garante **no máximo 1** e converte o anel (`[lng,lat]`) para WKT via `pathToWktPolygon` (normaliza + orienta CCW). **Nunca** toca `circleState`.
+- **Limpeza**: o cleanup do effect remove o `rightclick` listener e chama `draw.stop()`. A biblioteca `drawing` foi removida de `MAP_LIBRARIES` ([services/googleMaps.ts](../../../services/googleMaps.ts)).
 
 ### Validação
 
