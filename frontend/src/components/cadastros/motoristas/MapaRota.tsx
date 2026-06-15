@@ -23,7 +23,17 @@ export function MapaRota({ polyline }: MapaRotaProps) {
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const polylineRef = useRef<google.maps.Polyline | null>(null);
+
+  // O controle de tela cheia do Google usa a Fullscreen API do browser. Quando
+  // o mapa entra em tela cheia, liberamos todos os controles padrão; no modo
+  // pequeno fica só o botão de expandir.
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(document.fullscreenElement != null);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
 
   useEffect(() => {
     if (!map) return;
@@ -90,18 +100,32 @@ export function MapaRota({ polyline }: MapaRotaProps) {
         mapContainerStyle={containerStyle}
         center={SAO_PAULO_CENTER}
         zoom={14}
-        options={{
-          streetViewControl: false,
-          // Sem botões +/- de zoom; no lugar, o botão de tela cheia (canto inf. dir.).
-          zoomControl: false,
-          fullscreenControl: true,
-          fullscreenControlOptions: {
-            position: google.maps.ControlPosition.RIGHT_BOTTOM,
-          },
-          clickableIcons: false,
-          gestureHandling: 'greedy',
-          mapTypeControl: false,
-        }}
+        options={
+          isFullscreen
+            ? {
+                // Tela cheia: todos os controles padrão do Google Maps.
+                streetViewControl: true,
+                zoomControl: true,
+                fullscreenControl: true,
+                mapTypeControl: true,
+                rotateControl: true,
+                scaleControl: true,
+                clickableIcons: true,
+                gestureHandling: 'greedy',
+              }
+            : {
+                // Modo pequeno: sem +/- de zoom; só o botão de tela cheia (inf. dir.).
+                streetViewControl: false,
+                zoomControl: false,
+                fullscreenControl: true,
+                fullscreenControlOptions: {
+                  position: google.maps.ControlPosition.RIGHT_BOTTOM,
+                },
+                mapTypeControl: false,
+                clickableIcons: false,
+                gestureHandling: 'greedy',
+              }
+        }
         onLoad={(m) => setMap(m)}
         onUnmount={() => setMap(null)}
       />
