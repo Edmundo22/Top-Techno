@@ -8,4 +8,7 @@
 // (https://developers.google.com/maps/deprecations). O desenho de
 // círculo/polígono no cadastro de locais agora usa o Terra Draw
 // (terra-draw + terra-draw-google-maps-adapter).
-export const MAP_LIBRARIES: 'geometry'[] = ['geometry'];
+//
+// `places`: usada pela caixa de busca de endereço dentro do mapa do cadastro
+// de locais (`PlaceAutocompleteElement`). Requer Places API (New) na chave.
+export const MAP_LIBRARIES: ('geometry' | 'places')[] = ['geometry', 'places'];
