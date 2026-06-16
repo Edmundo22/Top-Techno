@@ -12,7 +12,7 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
 import { Modal } from '../../ui/Modal';
-import { LayersIcon, PinIcon, PolygonOutlineIcon, TrashIcon } from '../../ui/icons';
+import { LayersIcon, PinIcon, PolygonOutlineIcon, SearchIcon, TrashIcon } from '../../ui/icons';
 import { MAP_LIBRARIES } from '../../../services/googleMaps';
 import type { LocalDTO, LocalUpsertBody } from '../../../services/locaisApi';
 import {
@@ -22,7 +22,7 @@ import {
   type LatLngLiteral,
 } from '../../../utils/wkt';
 import { logError } from '../../../utils/logger';
-import { useMapAddressSearch } from './useMapAddressSearch';
+import { useAddressAutocomplete } from './useAddressAutocomplete';
 
 const NEW_COLOR = '#dc2626' as const; // vermelho — círculo/polígono novos
 const EDIT_CIRCLE_COLOR = '#f97316' as const; // laranja — ponto/círculo quando em edição
@@ -131,8 +131,9 @@ export function LocalFormModal({
   const markerRef = useRef<google.maps.Marker | null>(null);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  useMapAddressSearch(map);
+  useAddressAutocomplete(searchRef, map, isLoaded);
 
   // -------- Reset / pré-popular ao abrir
   useEffect(() => {
@@ -542,8 +543,8 @@ export function LocalFormModal({
         </>
       }
     >
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px,1fr]">
-        <div className="flex flex-col gap-3">
+      <div className="flex h-full min-h-[480px] flex-col gap-4 lg:flex-row">
+        <div className="flex shrink-0 flex-col gap-3 overflow-y-auto lg:w-80">
           <Input
             label="Código do Ponto *"
             name="codigoPonto"
@@ -599,7 +600,7 @@ export function LocalFormModal({
           )}
         </div>
 
-        <div className="flex h-[55vh] min-h-[360px] flex-col gap-2 lg:h-[62vh]">
+        <div className="flex min-h-[320px] flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {circleState ? (
               <button
@@ -672,6 +673,17 @@ export function LocalFormModal({
               <LayersIcon className="h-3.5 w-3.5" />
               {showOutros ? 'Ocultar todos os locais' : 'Todos os locais'}
             </button>
+
+            <div className="relative flex min-w-[180px] flex-1 items-center">
+              <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
+              <input
+                ref={searchRef}
+                type="text"
+                placeholder="Pesquisar endereço no mapa…"
+                aria-label="Pesquisar endereço"
+                className="h-9 w-full rounded-md border border-brand-line bg-white pl-9 pr-3 text-xs text-brand-ink outline-none transition-colors placeholder:text-brand-ink-muted/70 hover:border-brand-ink-soft focus:border-brand-accent"
+              />
+            </div>
           </div>
 
           <div className="relative flex-1 overflow-hidden rounded-card border border-brand-line bg-white">

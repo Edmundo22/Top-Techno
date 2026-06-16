@@ -35,13 +35,13 @@ Padrão imperativo (refs + `setMap(null)` no cleanup), mesmo do [components/moni
 
 InfoWindow é montada como HTML string (`infoHtml(local)`) para não depender de React no overlay.
 
-## Busca de endereço no mapa (`useMapAddressSearch`)
+## Busca de endereço (`useAddressAutocomplete`)
 
-Hook [useMapAddressSearch.ts](useMapAddressSearch.ts) que adiciona uma **caixa de busca de endereço dentro do mapa**, no topo-centro (`map.controls[TOP_CENTER]`), entre os controles padrão do Google. Usado pelos **dois mapas** do cadastro de locais (`MapaCadastroLocais` e o do `LocalFormModal`).
+Hook [useAddressAutocomplete.ts](useAddressAutocomplete.ts) que liga o **`google.maps.places.Autocomplete`** a um `<input>` próprio (design do projeto), dando o autocomplete "estilo Google Maps" (dropdown `.pac-container`, seleção pelo teclado). Fica **só no `LocalFormModal`** (modal de inserir/editar), no toolbar do mapa ao lado do botão "Todos os locais", esticando até a borda do mapa (`flex-1`). **Não** fica mais dentro do mapa nem no mapa lateral.
 
-- Usa `google.maps.places.PlaceAutocompleteElement` (Places API "new") — substituto do legado `google.maps.places.Autocomplete` (deprecado). Por isso `places` entrou em `MAP_LIBRARIES`.
-- No evento `gmp-select` (com fallback para `gmp-placeselect`), pega o `place` (`placePrediction.toPlace()` ou `event.place`), faz `fetchFields(['location','viewport'])` e enquadra o mapa (`fitBounds` no viewport, ou `setCenter`+`setZoom(17)`).
-- Largura responsiva (`min(360px, 70vw)`). **Requer a Places API (New) habilitada na chave** do Google Cloud (é uma API faturada).
+- No `place_changed`, lê `place.geometry` e enquadra o mapa (`fitBounds` no viewport, ou `setCenter`+`setZoom(17)`).
+- `.pac-container` tem `z-index: 1100` em [globals.css](../../../styles/globals.css) para ficar acima do Modal (inclusive em tela cheia).
+- `places` está em `MAP_LIBRARIES`. **Requer a Places API habilitada na chave** do Google Cloud. (O widget legado `Autocomplete` está deprecado mas funcional; o `PlaceAutocompleteElement` "new" foi descartado porque exige a Places API *New* e renderiza um web component difícil de casar com o design.)
 
 ## `LocalFormModal`
 
