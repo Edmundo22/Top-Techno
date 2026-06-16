@@ -22,6 +22,7 @@ import {
   type LatLngLiteral,
 } from '../../../utils/wkt';
 import { logError } from '../../../utils/logger';
+import { useMapAddressSearch } from './useMapAddressSearch';
 
 const NEW_COLOR = '#dc2626' as const; // vermelho — círculo/polígono novos
 const EDIT_CIRCLE_COLOR = '#f97316' as const; // laranja — ponto/círculo quando em edição
@@ -130,6 +131,8 @@ export function LocalFormModal({
   const markerRef = useRef<google.maps.Marker | null>(null);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
+
+  useMapAddressSearch(map);
 
   // -------- Reset / pré-popular ao abrir
   useEffect(() => {
