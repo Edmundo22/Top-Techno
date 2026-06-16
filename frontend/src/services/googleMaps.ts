@@ -9,6 +9,7 @@
 // círculo/polígono no cadastro de locais agora usa o Terra Draw
 // (terra-draw + terra-draw-google-maps-adapter).
 //
-// `places`: usada pela caixa de busca de endereço dentro do mapa do cadastro
-// de locais (`PlaceAutocompleteElement`). Requer Places API (New) na chave.
+// `places`: usada pela caixa de busca de endereço do modal de cadastro de
+// locais (`google.maps.places.Autocomplete` ligado a um input próprio). Requer
+// a Places API habilitada na chave.
 export const MAP_LIBRARIES: ('geometry' | 'places')[] = ['geometry', 'places'];

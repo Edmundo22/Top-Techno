@@ -5,7 +5,6 @@ import type { LocalDTO } from '../../../services/locaisApi';
 import { centroidOf, parseWktPolygon } from '../../../utils/wkt';
 import { logError } from '../../../utils/logger';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
-import { useMapAddressSearch } from './useMapAddressSearch';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
@@ -66,8 +65,6 @@ export function MapaCadastroLocais({
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showPois, setShowPois] = useState(true);
-
-  useMapAddressSearch(map);
 
   const markerRef = useRef<google.maps.Marker | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);

@@ -50,3 +50,9 @@ a {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Dropdown de sugestões do google.maps.places.Autocomplete: precisa ficar
+   acima do Modal (z-50) e do Modal em tela cheia. */
+.pac-container {
+  z-index: 1100;
+}
