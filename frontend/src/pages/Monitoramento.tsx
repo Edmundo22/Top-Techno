@@ -396,7 +396,7 @@ export function MonitoramentoPage() {
         </section>
 
         {/* Área principal: filtro lateral + mapa */}
-        <section className="flex min-h-[480px] flex-1 gap-3">
+        <section className="flex flex-col gap-3 lg:min-h-[480px] lg:flex-1 lg:flex-row">
           <FiltrosLateral
             placas={placasDisponiveis}
             selectedPlacas={selectedPlacas}
@@ -407,7 +407,7 @@ export function MonitoramentoPage() {
             selectedLinhas={selectedLinhas}
             onToggleLinha={handleToggleLinha}
           />
-          <div className="min-w-0 flex-1">
+          <div className="min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
             <MapaMonitoramento
               veiculos={veiculosVisiveis}
               rotas={rotasVisiveis}

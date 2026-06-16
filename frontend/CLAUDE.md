@@ -62,9 +62,16 @@ src/
 - [src/contexts/CLAUDE.md](src/contexts/CLAUDE.md)
 - [src/components/cadastros/CLAUDE.md](src/components/cadastros/CLAUDE.md)
 
+## Responsividade
+
+Layout mobile-first com breakpoint principal `lg` (1024px):
+- **Sidebar** ([components/layout/Sidebar.tsx](src/components/layout/Sidebar.tsx)): em `lg+` é a `aside` fixa (com colapso); em telas menores vira **drawer off-canvas** (menu sanduíche), aberto pelo botão de menu no `Topbar`. O estado `mobileOpen` vive no `AppLayout`; fecha ao trocar de rota, clicar no overlay ou no "x".
+- **Topbar**: botão de menu (`MenuIcon`) só em `< lg`; nome/email do usuário escondem em telas pequenas (`hidden sm:flex`).
+- **Páginas**: as áreas tabela+mapa / filtro+mapa empilham (`flex-col lg:flex-row`); alturas fixas (`h-[calc(100vh-140px)]`, `min-h-[480px]`) ficam só em `lg`, com alturas em `vh` no mobile para o conteúdo não colapsar.
+
 ## UI primitivos
 
-Em `src/components/ui/` ficam os primitivos: `Button`, `Input`, `Card`, `Modal`. `Modal` foi adicionado junto com a tela de Cadastro de Locais — overlay + portal, fecha em Esc/click no overlay, props `open`, `onClose`, `title`, `children`, `size` (`md`/`lg`/`xl`), `footer`.
+Em `src/components/ui/` ficam os primitivos: `Button`, `Input`, `Card`, `Modal`. `Modal` foi adicionado junto com a tela de Cadastro de Locais — overlay + portal, fecha em Esc/click no overlay, props `open`, `onClose`, `title`, `children`, `size` (`md`/`lg`/`xl`), `footer`. Tem **botão de tela cheia** ao lado do "x" (expande para a viewport inteira; cada abertura começa em modo janela).
 
 ## Google Maps libraries
 

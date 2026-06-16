@@ -217,13 +217,15 @@ export function HistoricoPage() {
           </div>
         )}
 
-        <section className="flex min-h-[480px] flex-1 gap-3">
-          <PlacasFilterCard
-            placas={placasAtivas}
-            selectedPlacas={selectedPlacas}
-            onTogglePlaca={handleTogglePlaca}
-          />
-          <div className="min-w-0 flex-1">
+        <section className="flex flex-col gap-3 lg:min-h-[480px] lg:flex-1 lg:flex-row">
+          <div className="h-[40vh] w-full shrink-0 lg:h-auto lg:w-44">
+            <PlacasFilterCard
+              placas={placasAtivas}
+              selectedPlacas={selectedPlacas}
+              onTogglePlaca={handleTogglePlaca}
+            />
+          </div>
+          <div className="min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
             <MapaHistorico
               posicoes={posicoesFiltradas}
               rotas={rotas}
