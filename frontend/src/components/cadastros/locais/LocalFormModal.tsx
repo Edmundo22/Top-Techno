@@ -596,7 +596,7 @@ export function LocalFormModal({
           )}
         </div>
 
-        <div className="flex h-[480px] flex-col gap-2 lg:h-[560px]">
+        <div className="flex h-[55vh] min-h-[360px] flex-col gap-2 lg:h-[62vh]">
           <div className="flex flex-wrap items-center gap-2">
             {circleState ? (
               <button

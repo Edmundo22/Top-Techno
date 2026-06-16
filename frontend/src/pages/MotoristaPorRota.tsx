@@ -217,9 +217,9 @@ export function MotoristaPorRotaPage() {
       title="Cadastros / Motorista por Rota"
       subtitle="Cadastro de motoristas e vínculo com rotas"
     >
-      <div className="flex h-[calc(100vh-140px)] min-h-0 flex-col gap-3 lg:flex-row">
+      <div className="flex flex-col gap-3 lg:h-[calc(100vh-140px)] lg:min-h-0 lg:flex-row">
         {/* Coluna esquerda — CRUD de motoristas */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:basis-[45%]">
+        <div className="flex min-h-[55vh] flex-1 flex-col gap-3 lg:min-h-0 lg:basis-[45%]">
           <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-4 py-3 shadow-card">
             <label className="relative flex items-center">
               <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
@@ -261,7 +261,7 @@ export function MotoristaPorRotaPage() {
         </div>
 
         {/* Coluna direita — vínculo motorista↔rota */}
-        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:basis-[55%]">
+        <div className="flex min-h-[80vh] flex-1 flex-col gap-3 lg:min-h-0 lg:basis-[55%]">
           {/* Rota + mini-mapa — 2/5 da altura */}
           <div className="min-h-0 basis-2/5">
             <RotaSelectMapCard
@@ -279,7 +279,7 @@ export function MotoristaPorRotaPage() {
                 Selecione uma rota para gerenciar os motoristas vinculados.
               </div>
             ) : (
-              <div className="flex h-full min-h-0 gap-3">
+              <div className="flex h-full min-h-0 flex-col gap-3 sm:flex-row">
                 <div className="min-h-0 min-w-0 basis-[60%]">
                   <VinculadosTable
                     vinculados={vinculados}

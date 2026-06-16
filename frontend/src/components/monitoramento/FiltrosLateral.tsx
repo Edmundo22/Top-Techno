@@ -23,7 +23,7 @@ export function FiltrosLateral({
   onToggleLinha,
 }: FiltrosLateralProps) {
   return (
-    <aside className="flex w-40 shrink-0 flex-col gap-2 overflow-hidden">
+    <aside className="flex h-[40vh] w-full shrink-0 flex-col gap-2 overflow-hidden lg:h-auto lg:w-40">
       <div className="min-h-0 flex-1 overflow-hidden">
         <PlacasFilterCard
           placas={placas}

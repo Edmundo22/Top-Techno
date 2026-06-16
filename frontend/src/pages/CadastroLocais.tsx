@@ -92,7 +92,7 @@ export function CadastroLocaisPage() {
 
   return (
     <AppLayout title="Cadastros / Locais" subtitle="Gerenciamento de pontos físicos">
-      <div className="flex h-[calc(100vh-140px)] min-h-0 flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:h-[calc(100vh-140px)] lg:min-h-0">
         <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-4 py-3 shadow-card">
           <label className="relative flex items-center">
             <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
@@ -126,7 +126,7 @@ export function CadastroLocaisPage() {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-          <div className="min-h-0 flex-1 lg:basis-3/5">
+          <div className="min-h-[60vh] flex-1 lg:min-h-0 lg:basis-3/5">
             <LocaisTable
               locais={locais}
               loading={loading}
