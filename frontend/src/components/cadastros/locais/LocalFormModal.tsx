@@ -31,6 +31,9 @@ const OTHER_COLOR = '#16a34a' as const; // verde — camadas "todos os ..."
 const CLOSED_COLOR = '#16a34a' as const; // verde — polígono já fechado (pronto p/ editar)
 const DRAW_BUTTON_BASE =
   'inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+// Leve destaque para os botões "Desenhar círculo/polígono" (ação principal do modal).
+const DRAW_IDLE =
+  'border border-brand-accent bg-brand-accent-soft text-brand-ink shadow-sm hover:border-brand-accent-hover hover:bg-brand-accent';
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 
 const containerStyle = { width: '100%', height: '100%' };
@@ -225,7 +228,8 @@ export function LocalFormModal({
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
     let projectionListener: google.maps.MapsEventListener | null = null;
-    let rightClickListener: google.maps.MapsEventListener | null = null;
+    let contextMenuHandler: ((e: MouseEvent) => void) | null = null;
+    const mapDiv = map.getDiv();
     let disposed = false;
     const pointColor = isEdit ? EDIT_CIRCLE_COLOR : NEW_COLOR;
     // Só carrega o polígono salvo quando continua sendo polígono (sem trocar de formato).
@@ -333,14 +337,17 @@ export function LocalFormModal({
         if (type === 'delete') syncFromStore();
       });
 
-      // Right-click fecha o polígono em desenho (a partir do 3º vértice). O
-      // Terra Draw fecha pela tecla de "finish" (Enter) e o adapter escuta keyup
-      // no getDiv(); então disparamos um Enter ali. O close() do mode valida o
-      // número de vértices internamente (não fecha com menos de 3).
-      rightClickListener = google.maps.event.addListener(map, 'rightclick', () => {
+      // Right-click fecha o polígono em desenho (a partir do 3º vértice). Usamos
+      // o evento DOM nativo `contextmenu` (o 'rightclick' do Maps é deprecado) no
+      // getDiv(), elemento onde o adapter do Terra Draw escuta o teclado. O Terra
+      // Draw fecha pela tecla "finish" (Enter); disparamos um keyup de Enter ali e
+      // o close() do mode valida o número de vértices (não fecha com menos de 3).
+      contextMenuHandler = (e: MouseEvent) => {
         if (drawRef.current?.getMode() !== 'polygon') return;
-        map.getDiv().dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
-      });
+        e.preventDefault();
+        mapDiv.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }));
+      };
+      mapDiv.addEventListener('contextmenu', contextMenuHandler);
 
       draw.start();
     };
@@ -354,7 +361,7 @@ export function LocalFormModal({
     return () => {
       disposed = true;
       projectionListener?.remove();
-      rightClickListener?.remove();
+      if (contextMenuHandler) mapDiv.removeEventListener('contextmenu', contextMenuHandler);
       try {
         drawRef.current?.stop();
       } catch (err) {
@@ -715,7 +722,9 @@ export function LocalFormModal({
 
         <div className="flex min-h-[320px] flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            {isCircle &&
+            {/* Grupo: desenhar no mapa (em destaque) */}
+            <div className="flex flex-wrap items-center gap-2">
+              {isCircle &&
               (circleState ? (
                 <button
                   type="button"
@@ -739,7 +748,7 @@ export function LocalFormModal({
                   type="button"
                   onClick={startPoint}
                   disabled={!drawReady}
-                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
+                  className={`${DRAW_BUTTON_BASE} ${DRAW_IDLE}`}
                 >
                   <PinIcon className="h-3.5 w-3.5" />
                   Desenhar círculo
@@ -769,14 +778,20 @@ export function LocalFormModal({
                   type="button"
                   onClick={startPolygon}
                   disabled={!drawReady}
-                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
+                  className={`${DRAW_BUTTON_BASE} ${DRAW_IDLE}`}
                 >
                   <PolygonOutlineIcon className="h-3.5 w-3.5" />
                   Desenhar polígono
                 </button>
               ))}
 
-            <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="chip" />
+            </div>
+
+            {/* separador entre "desenhar no mapa" e "mostrar no mapa" */}
+            <span className="hidden h-7 w-px self-center bg-brand-line sm:block" aria-hidden />
+
+            {/* Grupo: mostrar no mapa (ofuscado dentro do modal) */}
+            <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="chip" muted />
 
             <div className="relative flex min-w-[180px] flex-1 items-center">
               <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />

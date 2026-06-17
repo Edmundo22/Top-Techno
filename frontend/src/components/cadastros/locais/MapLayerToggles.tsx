@@ -8,6 +8,8 @@ interface MapLayerTogglesProps {
   value: MapLayer;
   onChange: (value: MapLayer) => void;
   variant?: 'card' | 'chip';
+  // Ofusca um pouco o grupo (usado no modal, p/ dar destaque ao "desenhar").
+  muted?: boolean;
 }
 
 type Layer = Exclude<MapLayer, 'none'>;
@@ -28,7 +30,12 @@ const ACTIVE = 'border border-green-600 bg-green-50 text-green-800 hover:bg-gree
 const INACTIVE =
   'border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line';
 
-export function MapLayerToggles({ value, onChange, variant = 'chip' }: MapLayerTogglesProps) {
+export function MapLayerToggles({
+  value,
+  onChange,
+  variant = 'chip',
+  muted = false,
+}: MapLayerTogglesProps) {
   const buttons = OPTIONS.map(({ key, label, Icon }) => {
     const active = value === key;
     return (
@@ -55,5 +62,13 @@ export function MapLayerToggles({ value, onChange, variant = 'chip' }: MapLayerT
     );
   }
 
-  return <div className="flex flex-wrap items-center gap-2">{buttons}</div>;
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-2${
+        muted ? ' opacity-60 transition-opacity hover:opacity-100 focus-within:opacity-100' : ''
+      }`}
+    >
+      {buttons}
+    </div>
+  );
 }
