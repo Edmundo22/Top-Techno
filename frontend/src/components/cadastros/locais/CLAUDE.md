@@ -2,38 +2,62 @@
 
 Componentes da tela `/cadastros/locais`: tabela com ordenação/filtros, mapa lateral, modal de cadastro/edição com ferramentas de desenho (Terra Draw), confirmação de exclusão.
 
+## Tipo de local: círculo OU polígono (exclusivo)
+
+Cada local é **exclusivamente** círculo (`tipoLocal === 1`) ou polígono (`tipoLocal === 2`) — ver
+[backend/src/modules/locais/CLAUDE.md](../../../../../backend/src/modules/locais/CLAUDE.md). Isso
+guia toda a tela: a escolha do formato acontece **antes** do form (`LocalTipoPromptModal`), o form
+mostra só os controles do tipo, a tabela mostra só o ícone do tipo e o mapa tem 3 camadas
+(círculos / polígonos / todos). `latitude/longitude` ficam sempre preenchidos (polígono novo usa o
+centróide); só o `raio` some quando vira polígono.
+
 ## Arquitetura
 
 ```
 CadastroLocais.tsx (page)
-  ├─ Toolbar (Novo / filtro universal / status)
+  ├─ Toolbar (Novo / filtro universal / StatsCards / MapLayerToggles)
   ├─ Área principal (flex row em lg+; coluna em sm)
   │    ├─ LocaisTable          ← tabela + sort + filtro por coluna
   │    └─ MapaCadastroLocais   ← Google Maps, padrão imperativo
-  ├─ LocalFormModal            ← criação e edição (mesmo componente, prop `initial`)
+  ├─ LocalTipoPromptModal      ← pergunta círculo/polígono antes de inserir/editar
+  ├─ LocalFormModal            ← criação e edição (props `initial` + `tipoLocal`)
   └─ Modal (confirmação delete)
 ```
+
+## `LocalTipoPromptModal`
+
+Modal curto aberto **antes** do `LocalFormModal`. No **create** mostra dois botões (Círculo /
+Polígono); no **edit** mostra "Manter formato (X)" e "Alterar para (Y)" conforme o `tipoLocal`
+atual. O `onChoose(tipo)` define o `formTipo` e abre o `LocalFormModal`. Trocar o formato na edição
+substitui os dados do tipo anterior ao salvar (o `UPDATE` seta todas as colunas).
+
+## `MapLayerToggles` (+ tipo `MapLayer`)
+
+Três botões mutuamente exclusivos — **Todos os Círculos / Todos os Polígonos / Todos os Locais**
+(`'circles' | 'polygons' | 'all'`, clicar no ativo volta a `'none'`). Reusado nos **dois** lugares:
+toolbar da página (`variant="card"`) e toolbar do mapa do modal (`variant="chip"`). Substitui o antigo
+`ShowAllPoligonosCard` e o toggle único "Todos os locais".
 
 ## `LocaisTable`
 
 Sem dependências externas. Sort com `useState`/`useMemo`, filtro por coluna (inputs no `<thead>`) e filtro universal (input na toolbar — recebido por prop). Ciclo do sort: `null → asc → desc → null`.
 
-Coluna **Ações** tem 4 ícones SVG inline:
+Coluna **Ações** mostra o ícone do **formato real** do local + editar/excluir:
 
 | Ícone | Função |
 |-------|--------|
-| Pin   | Toggle do marker + círculo (vermelho) no mapa lateral. |
-| Hex   | Toggle do polígono (vermelho) no mapa lateral. Desabilitado se o local não tem `poligonoWkt`. |
-| Lápis | Abre `LocalFormModal` em modo edição. |
+| Pin   | Só em círculo (`tipoLocal === 1`). Toggle do marker + círculo (vermelho) no mapa lateral. |
+| Hex   | Só em polígono (`tipoLocal === 2`). Toggle do polígono (vermelho) no mapa lateral. |
+| Lápis | Abre o `LocalTipoPromptModal` (modo edit) → `LocalFormModal`. |
 | Lixo  | Abre modal de confirmação; on confirm chama `DELETE /locais/:id`. |
 
 `activeMarkerId` e `activePoligonoId` são **single-id** — só um local por vez é destacado no mapa. Click no mesmo ícone alterna off.
 
 ## `MapaCadastroLocais`
 
-Padrão imperativo (refs + `setMap(null)` no cleanup), mesmo do [components/monitoramento/MapaMonitoramento.tsx](../../monitoramento/MapaMonitoramento.tsx). Refs separadas para `marker`, `circle`, `polygon` e `infoWindow`. Carrega Google Maps via `useJsApiLoader` com `MAP_LIBRARIES` compartilhado de [services/googleMaps.ts](../../../services/googleMaps.ts).
+Padrão imperativo (refs + `setMap(null)` no cleanup), mesmo do [components/monitoramento/MapaMonitoramento.tsx](../../monitoramento/MapaMonitoramento.tsx). Refs separadas para o item ativo (`marker`/`circle`/`polygon` vermelhos) e para as camadas "todos" (arrays de `polygon`, `circle`, `marker` verdes). Carrega Google Maps via `useJsApiLoader` com `MAP_LIBRARIES` compartilhado de [services/googleMaps.ts](../../../services/googleMaps.ts). **Street View** ligado (`streetViewControl: true`).
 
-InfoWindow é montada como HTML string (`infoHtml(local)`) para não depender de React no overlay.
+Recebe `mapLayer: MapLayer`: desenha todos os **círculos** (tipo 1, marker+círculo verde), todos os **polígonos** (tipo 2, verde) ou os dois (`'all'`), omitindo o item destacado em vermelho. InfoWindow é montada como HTML string (`infoHtml(local)`) para não depender de React no overlay.
 
 ## Busca de endereço (`useAddressAutocomplete`)
 
@@ -45,16 +69,21 @@ Hook [useAddressAutocomplete.ts](useAddressAutocomplete.ts) que liga o **`google
 
 ## `LocalFormModal`
 
-Modal cobrindo criação e edição. Edição pré-popula form, círculo (cor laranja `#f97316` para distinguir de "novo") e polígono (vermelho). Criação começa zerado.
+Modal cobrindo criação e edição. Recebe a prop **`tipoLocal: 1 | 2`** (definida pelo
+`LocalTipoPromptModal`) e mostra **só** os controles desse formato: círculo → input "Raio (m)" +
+botões "Desenhar/Apagar círculo"; polígono → botões "Desenhar/Apagar polígono". Edição pré-popula
+form, círculo (laranja `#f97316`) e polígono. `formatChanged = isEdit && initial.tipoLocal !== tipoLocal`:
+ao trocar de formato a geometria **não** é pré-populada (o tipo antigo será substituído no save).
+Street View ligado no mapa.
 
 ### Estado interno
-- `form` — `{ codigoPonto, endereco, raio, pontoParada }` (string).
-- `circleState` — `{ lat, lng } | null`. Centro do local. **Não** é feature do Terra Draw — é overlay imperativo (marker + círculo), só muda ao posicionar ou apagar. Raio vem do input `form.raio`, não do desenho.
+- `form` — `{ codigoPonto, endereco, raio, pontoParada }` (string). `raio` só conta no círculo.
+- `circleState` — `{ lat, lng } | null`. Centro do círculo. **Não** é feature do Terra Draw — é overlay imperativo (marker + círculo), só muda ao posicionar ou apagar. Permanece `null` no polígono.
 - `poligonoWkt` — `string | null` em formato `POLYGON((lng lat, ...))`. Derivado do polígono do store do Terra Draw a cada `finish`/`delete`.
 - `drawMode` — `'point' | 'polygon' | 'select'`. Espelha o modo ativo do Terra Draw (`select` é o padrão: visualiza e permite editar).
 - `drawReady` — `boolean`. `true` após o evento `ready` do Terra Draw (libera os botões de desenho).
 - `mapCenter` / `mapZoom` — centro/zoom inicial do mapa, definidos ao abrir (a partir de `initial`); **não** acompanham o arraste, para o mapa não "pular" durante a edição.
-- `showOutros` — toggle da camada verde "Todos os Locais" (omite o registro em edição).
+- `mapLayer` — `MapLayer` das camadas verdes (`MapLayerToggles` no toolbar do mapa; omite o registro em edição; desenha círculos e/ou polígonos dos outros locais).
 - `saving`, `error`.
 
 ### Desenho com Terra Draw (o DrawingManager foi removido na v3.65)
@@ -71,11 +100,20 @@ O Terra Draw é dono apenas do **polígono**; o **centro/círculo é imperativo*
 
 ### Validação
 
-Submit habilitado quando: `codigoPonto`, `endereco`, `pontoParada` preenchidos + `raio > 0` + `circleState != null`. Polígono **não** é obrigatório (mostra aviso amarelo).
+Campos comuns sempre obrigatórios (`codigoPonto`, `endereco`, `pontoParada`). Além deles:
+- **Círculo** (`tipoLocal === 1`): `raio > 0` + `circleState != null`.
+- **Polígono** (`tipoLocal === 2`): `poligonoWkt != null`.
 
-### "Todos os Locais"
+### Submit (`LocalUpsertBody`, união discriminada)
 
-Toggle verde no canto direito do toolbar. Renderiza polygons verdes (`#16a34a`) clicáveis com InfoWindow contendo os mesmos campos da tabela. No modal de edição, o próprio registro é omitido dessa camada.
+- Círculo: `{ tipoLocal: 1, latitude/longitude = circleState, raio, poligonoWkt: null }`.
+- Polígono: `{ tipoLocal: 2, latitude/longitude = initial ?? centróide, raio: null, poligonoWkt }`
+  — mantém o centro existente; polígono novo usa `centroidOf(parseWktPolygon(...))`.
+
+### Camadas no mapa do modal
+
+`MapLayerToggles` (variant `chip`) controlando `mapLayer`. Renderiza, em verde (`#16a34a`),
+círculos e/ou polígonos dos **outros** locais (omite o registro em edição), clicáveis com InfoWindow.
 
 ## WKT
 

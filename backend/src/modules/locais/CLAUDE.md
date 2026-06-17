@@ -22,13 +22,34 @@ interface LocalDTO {
   endereco: string | null;
   latitude: number | null;
   longitude: number | null;
-  raio: number | null;     // metros
+  raio: number | null;     // metros (null em polígono)
   pontoParada: string | null;
-  poligonoWkt: string | null; // ex.: "POLYGON((lng lat, lng lat, ...))"
+  poligonoWkt: string | null; // ex.: "POLYGON((lng lat, lng lat, ...))" (null em círculo)
+  tipoLocal: number;          // 1 = círculo, 2 = polígono
 }
 ```
 
 `pontoParada` reusa `shared/utils/normalizePontoParada` (extraído do `monitoramento`) — coluna é heterogênea no banco (string/number/bool).
+
+## `TIPO_LOCAL` — círculo OU polígono (exclusivo)
+
+Cada local é **exclusivamente** um dos dois formatos, marcado pela coluna `[TB_LOCAL].[TIPO_LOCAL]`:
+
+| Tipo | `TIPO_LOCAL` | `LATITUDE`/`LONGITUDE` | `RAIO` | `LOCAL_GEO` |
+|------|--------------|------------------------|--------|-------------|
+| Círculo  | 1 | centro | raio (m) | **NULL** |
+| Polígono | 2 | centro preservado, senão centróide | **NULL** | polígono WKT |
+
+- O `INSERT`/`UPDATE` setam **todas** as colunas, então trocar de formato já zera o tipo antigo
+  (círculo→polígono zera `RAIO` e grava `LOCAL_GEO`; polígono→círculo zera `LOCAL_GEO` e grava `RAIO`).
+- `LATITUDE`/`LONGITUDE` **nunca** são zerados (Monitoramento e Histórico filtram
+  `LATITUDE/LONGITUDE IS NOT NULL` — locais-polígono precisam continuar localizáveis). O frontend
+  manda o centro existente ou, para polígono novo, o centróide do anel.
+- Schema é `z.discriminatedUnion('tipoLocal', [circulo, poligono])`: círculo exige `raio` (sem
+  `poligonoWkt`); polígono exige `poligonoWkt` (sem `raio`); `latitude`/`longitude` em ambos.
+- Linhas legadas sem `TIPO_LOCAL`: `mapLocalRowToDTO` faz fallback `poligonoWkt ? 2 : 1`
+  (`Number(...)` cobre bigint vindo como string). Backfill sugerido:
+  `UPDATE TB_LOCAL SET TIPO_LOCAL = CASE WHEN LOCAL_GEO IS NOT NULL AND LOCAL_GEO.STGeometryType() IN ('Polygon','MultiPolygon') THEN 2 ELSE 1 END WHERE TIPO_LOCAL IS NULL;`
 
 ## `LOCAL_GEO` (`geography`)
 

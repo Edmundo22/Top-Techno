@@ -9,14 +9,16 @@ export interface LocalRow {
   RAIO: number | null;
   PONTO_PARADA: string | number | boolean | null;
   LOCAL_GEO_WKT: string | null;
+  TIPO_LOCAL: number | string | null;
 }
 
 export interface LocalUpsertInput {
+  tipoLocal: number;
   codigoPonto: string;
   endereco: string;
   latitude: number;
   longitude: number;
-  raio: number;
+  raio: number | null;
   pontoParada: string | null;
   poligonoWkt: string | null;
 }
@@ -34,6 +36,7 @@ const BASE_SELECT = `
     LONGITUDE,
     RAIO,
     PONTO_PARADA,
+    TIPO_LOCAL,
     CASE
       WHEN LOCAL_GEO IS NULL THEN NULL
       WHEN LOCAL_GEO.STGeometryType() IN ('Polygon', 'MultiPolygon')
@@ -65,6 +68,7 @@ export class LocalRepository {
     const pool = await getPool();
     const insert = await pool
       .request()
+      .input('tipoLocal', sql.Int, input.tipoLocal)
       .input('codigoPonto', sql.VarChar(50), input.codigoPonto)
       .input('endereco', sql.VarChar(500), input.endereco)
       .input('latitude', sql.Float, input.latitude)
@@ -74,10 +78,10 @@ export class LocalRepository {
       .input('wkt', sql.NVarChar(sql.MAX), input.poligonoWkt)
       .query<{ ID_LOCAL: number }>(
         `INSERT INTO [TOP_TECHNO].[dbo].[TB_LOCAL]
-           (CODIGO_PONTO, ENDERECO, LATITUDE, LONGITUDE, RAIO, PONTO_PARADA, LOCAL_GEO)
+           (CODIGO_PONTO, ENDERECO, LATITUDE, LONGITUDE, RAIO, PONTO_PARADA, TIPO_LOCAL, LOCAL_GEO)
          OUTPUT INSERTED.ID_LOCAL
          VALUES
-           (@codigoPonto, @endereco, @latitude, @longitude, @raio, @pontoParada,
+           (@codigoPonto, @endereco, @latitude, @longitude, @raio, @pontoParada, @tipoLocal,
             CASE WHEN @wkt IS NULL THEN NULL ELSE geography::STGeomFromText(@wkt, 4326) END);`,
       );
     const newId = insert.recordset[0]?.ID_LOCAL;
@@ -96,6 +100,7 @@ export class LocalRepository {
     const result = await pool
       .request()
       .input('id', sql.BigInt, id)
+      .input('tipoLocal', sql.Int, input.tipoLocal)
       .input('codigoPonto', sql.VarChar(50), input.codigoPonto)
       .input('endereco', sql.VarChar(500), input.endereco)
       .input('latitude', sql.Float, input.latitude)
@@ -111,6 +116,7 @@ export class LocalRepository {
                LONGITUDE    = @longitude,
                RAIO         = @raio,
                PONTO_PARADA = @pontoParada,
+               TIPO_LOCAL   = @tipoLocal,
                LOCAL_GEO    = CASE WHEN @wkt IS NULL THEN NULL ELSE geography::STGeomFromText(@wkt, 4326) END
          WHERE ID_LOCAL = @id;`,
       );

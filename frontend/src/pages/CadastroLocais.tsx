@@ -5,12 +5,11 @@ import { Modal } from '../components/ui/Modal';
 import { PlusIcon, SearchIcon } from '../components/ui/icons';
 import { LocaisTable } from '../components/cadastros/locais/LocaisTable';
 import { LocalFormModal } from '../components/cadastros/locais/LocalFormModal';
+import { LocalTipoPromptModal } from '../components/cadastros/locais/LocalTipoPromptModal';
 import { MapaCadastroLocais } from '../components/cadastros/locais/MapaCadastroLocais';
-import {
-  ShowAllPoligonosCard,
-  StatsCards,
-} from '../components/cadastros/locais/StatsCards';
-import { locaisApi, type LocalDTO } from '../services/locaisApi';
+import { MapLayerToggles, type MapLayer } from '../components/cadastros/locais/MapLayerToggles';
+import { StatsCards } from '../components/cadastros/locais/StatsCards';
+import { locaisApi, type LocalDTO, type TipoLocal } from '../services/locaisApi';
 import { extractErrorMessage } from '../services/api';
 import { logError, logSuccess } from '../utils/logger';
 
@@ -21,9 +20,14 @@ export function CadastroLocaisPage() {
   const [globalFilter, setGlobalFilter] = useState('');
   const [activeMarkerId, setActiveMarkerId] = useState<number | null>(null);
   const [activePoligonoId, setActivePoligonoId] = useState<number | null>(null);
-  const [showAllPoligonos, setShowAllPoligonos] = useState(false);
+  const [mapLayer, setMapLayer] = useState<MapLayer>('none');
+  // Prompt "círculo ou polígono" antes de abrir o form (inserir/editar).
+  const [tipoPrompt, setTipoPrompt] = useState<{ mode: 'create' } | { mode: 'edit'; local: LocalDTO } | null>(
+    null,
+  );
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<LocalDTO | null>(null);
+  const [formTipo, setFormTipo] = useState<TipoLocal>(1);
   const [confirmDelete, setConfirmDelete] = useState<LocalDTO | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -52,12 +56,15 @@ export function CadastroLocaisPage() {
   const handleTogglePoligono = (id: number) =>
     setActivePoligonoId((prev) => (prev === id ? null : id));
 
-  const openCreate = () => {
-    setEditing(null);
-    setShowForm(true);
-  };
-  const openEdit = (local: LocalDTO) => {
-    setEditing(local);
+  const openCreate = () => setTipoPrompt({ mode: 'create' });
+  const openEdit = (local: LocalDTO) => setTipoPrompt({ mode: 'edit', local });
+
+  // Escolha do formato no prompt → abre o form já com o tipo definido.
+  const handleChooseTipo = (tipo: TipoLocal) => {
+    if (!tipoPrompt) return;
+    setEditing(tipoPrompt.mode === 'edit' ? tipoPrompt.local : null);
+    setFormTipo(tipo);
+    setTipoPrompt(null);
     setShowForm(true);
   };
 
@@ -114,10 +121,7 @@ export function CadastroLocaisPage() {
           )}
 
           <div className="ml-auto flex items-center gap-2">
-            <ShowAllPoligonosCard
-              active={showAllPoligonos}
-              onToggle={() => setShowAllPoligonos((v) => !v)}
-            />
+            <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="card" />
             <Button onClick={openCreate}>
               <PlusIcon className="h-4 w-4" />
               Novo local
@@ -147,11 +151,22 @@ export function CadastroLocaisPage() {
               locais={locais}
               activeMarkerId={activeMarkerId}
               activePoligonoId={activePoligonoId}
-              showAllPoligonos={showAllPoligonos}
+              mapLayer={mapLayer}
             />
           </div>
         </div>
       </div>
+
+      <LocalTipoPromptModal
+        open={tipoPrompt != null}
+        onClose={() => setTipoPrompt(null)}
+        mode={tipoPrompt?.mode ?? 'create'}
+        currentTipo={
+          tipoPrompt?.mode === 'edit' ? (tipoPrompt.local.tipoLocal as TipoLocal) : undefined
+        }
+        codigoPonto={tipoPrompt?.mode === 'edit' ? tipoPrompt.local.codigoPonto : undefined}
+        onChoose={handleChooseTipo}
+      />
 
       <LocalFormModal
         open={showForm}
@@ -161,6 +176,7 @@ export function CadastroLocaisPage() {
         }}
         onSaved={handleSaved}
         initial={editing}
+        tipoLocal={formTipo}
         allLocais={locais}
         submit={(body) =>
           editing ? locaisApi.update(editing.idLocal, body) : locaisApi.create(body)

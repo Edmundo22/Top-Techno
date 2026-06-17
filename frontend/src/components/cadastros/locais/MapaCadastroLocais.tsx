@@ -5,6 +5,7 @@ import type { LocalDTO } from '../../../services/locaisApi';
 import { centroidOf, parseWktPolygon } from '../../../utils/wkt';
 import { logError } from '../../../utils/logger';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
+import type { MapLayer } from './MapLayerToggles';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
@@ -18,7 +19,7 @@ interface MapaCadastroLocaisProps {
   locais: LocalDTO[];
   activeMarkerId: number | null;
   activePoligonoId: number | null;
-  showAllPoligonos: boolean;
+  mapLayer: MapLayer;
 }
 
 function infoHtml(local: LocalDTO): string {
@@ -53,7 +54,7 @@ export function MapaCadastroLocais({
   locais,
   activeMarkerId,
   activePoligonoId,
-  showAllPoligonos,
+  mapLayer,
 }: MapaCadastroLocaisProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -71,7 +72,9 @@ export function MapaCadastroLocais({
   const polygonRef = useRef<google.maps.Polygon | null>(null);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
   const allPolygonsRef = useRef<google.maps.Polygon[]>([]);
-  const allPolygonsInfoRef = useRef<google.maps.InfoWindow | null>(null);
+  const allCirclesRef = useRef<google.maps.Circle[]>([]);
+  const allMarkersRef = useRef<google.maps.Marker[]>([]);
+  const allInfoRef = useRef<google.maps.InfoWindow | null>(null);
 
   const clearMarker = useCallback(() => {
     markerRef.current?.setMap(null);
@@ -178,52 +181,103 @@ export function MapaCadastroLocais({
     };
   }, [map, activePoligonoId, locais, clearPolygon]);
 
-  // Camada "Todos os polígonos" — não conflita com o polígono ativo (vermelho)
-  // pois usa cor verde e zIndex menor.
+  // Camadas "Todos os Círculos / Polígonos / Locais" — verde, zIndex menor que o
+  // ativo (vermelho). 'all' = círculos + polígonos. Omite o item destacado.
   useEffect(() => {
     if (!map) return;
-    allPolygonsInfoRef.current?.close();
-    allPolygonsRef.current.forEach((p) => p.setMap(null));
-    allPolygonsRef.current = [];
-    if (!showAllPoligonos) return;
-    locais
-      .filter((l) => l.poligonoWkt && l.idLocal !== activePoligonoId)
-      .forEach((local) => {
-        let path: { lat: number; lng: number }[];
-        try {
-          path = parseWktPolygon(local.poligonoWkt as string);
-        } catch (err) {
-          logError('parseWktPolygon todos', err, { idLocal: local.idLocal });
-          return;
-        }
-        const polygon = new google.maps.Polygon({
-          map,
-          paths: path,
-          strokeColor: ALL_POLY_COLOR,
-          strokeOpacity: 0.9,
-          strokeWeight: 2,
-          fillColor: ALL_POLY_COLOR,
-          fillOpacity: FILL_OPACITY,
-          clickable: true,
-          zIndex: 15,
-        });
-        polygon.addListener('click', () => {
-          allPolygonsInfoRef.current?.close();
-          const iw = new google.maps.InfoWindow({
-            content: infoHtml(local),
-            position: centroidOf(path),
-          });
-          iw.open({ map });
-          allPolygonsInfoRef.current = iw;
-        });
-        allPolygonsRef.current.push(polygon);
-      });
-    return () => {
-      allPolygonsInfoRef.current?.close();
+    const clear = () => {
+      allInfoRef.current?.close();
       allPolygonsRef.current.forEach((p) => p.setMap(null));
       allPolygonsRef.current = [];
+      allCirclesRef.current.forEach((c) => c.setMap(null));
+      allCirclesRef.current = [];
+      allMarkersRef.current.forEach((m) => m.setMap(null));
+      allMarkersRef.current = [];
     };
-  }, [map, showAllPoligonos, locais, activePoligonoId]);
+    clear();
+    if (mapLayer === 'none') return;
+    const showCircles = mapLayer === 'circles' || mapLayer === 'all';
+    const showPolygons = mapLayer === 'polygons' || mapLayer === 'all';
+
+    const openInfo = (local: LocalDTO, position: google.maps.LatLngLiteral) => {
+      allInfoRef.current?.close();
+      const iw = new google.maps.InfoWindow({ content: infoHtml(local), position });
+      iw.open({ map });
+      allInfoRef.current = iw;
+    };
+
+    if (showPolygons) {
+      locais
+        .filter((l) => l.tipoLocal === 2 && l.poligonoWkt && l.idLocal !== activePoligonoId)
+        .forEach((local) => {
+          let path: { lat: number; lng: number }[];
+          try {
+            path = parseWktPolygon(local.poligonoWkt as string);
+          } catch (err) {
+            logError('parseWktPolygon todos', err, { idLocal: local.idLocal });
+            return;
+          }
+          const polygon = new google.maps.Polygon({
+            map,
+            paths: path,
+            strokeColor: ALL_POLY_COLOR,
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            fillColor: ALL_POLY_COLOR,
+            fillOpacity: FILL_OPACITY,
+            clickable: true,
+            zIndex: 15,
+          });
+          polygon.addListener('click', () => openInfo(local, centroidOf(path)));
+          allPolygonsRef.current.push(polygon);
+        });
+    }
+
+    if (showCircles) {
+      locais
+        .filter(
+          (l) =>
+            l.tipoLocal === 1 &&
+            l.latitude != null &&
+            l.longitude != null &&
+            l.idLocal !== activeMarkerId,
+        )
+        .forEach((local) => {
+          const center = { lat: local.latitude as number, lng: local.longitude as number };
+          const circle = new google.maps.Circle({
+            map,
+            center,
+            radius: local.raio ?? 0,
+            strokeColor: ALL_POLY_COLOR,
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            fillColor: ALL_POLY_COLOR,
+            fillOpacity: FILL_OPACITY,
+            clickable: true,
+            zIndex: 14,
+          });
+          const marker = new google.maps.Marker({
+            map,
+            position: center,
+            icon: {
+              path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+              scale: 4,
+              fillColor: ALL_POLY_COLOR,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 1.5,
+            },
+            zIndex: 16,
+          });
+          circle.addListener('click', () => openInfo(local, center));
+          marker.addListener('click', () => openInfo(local, center));
+          allCirclesRef.current.push(circle);
+          allMarkersRef.current.push(marker);
+        });
+    }
+
+    return clear;
+  }, [map, mapLayer, locais, activePoligonoId, activeMarkerId]);
 
   if (!apiKey) {
     return (
@@ -256,7 +310,7 @@ export function MapaCadastroLocais({
         center={SAO_PAULO_CENTER}
         zoom={DEFAULT_ZOOM}
         options={{
-          streetViewControl: false,
+          streetViewControl: true,
           fullscreenControl: true,
           zoomControl: true,
           clickableIcons: false,

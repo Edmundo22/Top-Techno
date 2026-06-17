@@ -12,9 +12,9 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { MapPoiToggle } from '../../ui/MapPoiToggle';
 import { Modal } from '../../ui/Modal';
-import { LayersIcon, PinIcon, PolygonOutlineIcon, SearchIcon, TrashIcon } from '../../ui/icons';
+import { PinIcon, PolygonOutlineIcon, SearchIcon, TrashIcon } from '../../ui/icons';
 import { MAP_LIBRARIES } from '../../../services/googleMaps';
-import type { LocalDTO, LocalUpsertBody } from '../../../services/locaisApi';
+import type { LocalDTO, LocalUpsertBody, TipoLocal } from '../../../services/locaisApi';
 import {
   centroidOf,
   parseWktPolygon,
@@ -23,10 +23,11 @@ import {
 } from '../../../utils/wkt';
 import { logError } from '../../../utils/logger';
 import { useAddressAutocomplete } from './useAddressAutocomplete';
+import { MapLayerToggles, type MapLayer } from './MapLayerToggles';
 
 const NEW_COLOR = '#dc2626' as const; // vermelho — círculo/polígono novos
 const EDIT_CIRCLE_COLOR = '#f97316' as const; // laranja — ponto/círculo quando em edição
-const OTHER_COLOR = '#16a34a' as const; // verde — camada "Todos os Locais"
+const OTHER_COLOR = '#16a34a' as const; // verde — camadas "todos os ..."
 const CLOSED_COLOR = '#16a34a' as const; // verde — polígono já fechado (pronto p/ editar)
 const DRAW_BUTTON_BASE =
   'inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50';
@@ -49,6 +50,7 @@ interface LocalFormModalProps {
   onClose: () => void;
   onSaved: (local: LocalDTO) => void;
   initial: LocalDTO | null;
+  tipoLocal: TipoLocal; // formato escolhido no LocalTipoPromptModal
   allLocais: LocalDTO[];
   submit: (body: LocalUpsertBody) => Promise<LocalDTO>;
 }
@@ -102,6 +104,7 @@ export function LocalFormModal({
   onClose,
   onSaved,
   initial,
+  tipoLocal,
   allLocais,
   submit,
 }: LocalFormModalProps) {
@@ -113,6 +116,11 @@ export function LocalFormModal({
   });
 
   const isEdit = initial != null;
+  const isCircle = tipoLocal === 1;
+  const isPolygon = tipoLocal === 2;
+  // Edição trocando o formato: não pré-popula a geometria (o tipo antigo será substituído).
+  const formatChanged = isEdit && initial != null && initial.tipoLocal !== tipoLocal;
+
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [circleState, setCircleState] = useState<{ lat: number; lng: number } | null>(null);
   const [poligonoWkt, setPoligonoWkt] = useState<string | null>(null);
@@ -120,7 +128,7 @@ export function LocalFormModal({
   const [drawReady, setDrawReady] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>(SAO_PAULO_CENTER);
   const [mapZoom, setMapZoom] = useState(12);
-  const [showOutros, setShowOutros] = useState(false);
+  const [mapLayer, setMapLayer] = useState<MapLayer>('none');
   const [showPois, setShowPois] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +138,8 @@ export function LocalFormModal({
   const circleRef = useRef<google.maps.Circle | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const outrosPolygonsRef = useRef<google.maps.Polygon[]>([]);
+  const outrosCirclesRef = useRef<google.maps.Circle[]>([]);
+  const outrosMarkersRef = useRef<google.maps.Marker[]>([]);
   const outrosInfoRef = useRef<google.maps.InfoWindow | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -139,16 +149,21 @@ export function LocalFormModal({
   useEffect(() => {
     if (!open) return;
     if (initial) {
+      const keepCircle =
+        isCircle && !formatChanged && initial.latitude != null && initial.longitude != null;
+      const keepPolygon = isPolygon && !formatChanged && initial.poligonoWkt != null;
       setForm({
         codigoPonto: initial.codigoPonto ?? '',
         endereco: initial.endereco ?? '',
-        raio: initial.raio != null ? String(initial.raio) : '',
+        raio: keepCircle && initial.raio != null ? String(initial.raio) : '',
         pontoParada: initial.pontoParada ?? '',
       });
-      const hasPoint = initial.latitude != null && initial.longitude != null;
-      setCircleState(hasPoint ? { lat: initial.latitude as number, lng: initial.longitude as number } : null);
-      setPoligonoWkt(initial.poligonoWkt ?? null);
-      if (hasPoint) {
+      setCircleState(
+        keepCircle ? { lat: initial.latitude as number, lng: initial.longitude as number } : null,
+      );
+      setPoligonoWkt(keepPolygon ? (initial.poligonoWkt as string) : null);
+      // Centraliza no local existente (mesmo trocando de formato) para desenhar perto.
+      if (initial.latitude != null && initial.longitude != null) {
         setMapCenter({ lat: initial.latitude as number, lng: initial.longitude as number });
         setMapZoom(15);
       } else if (initial.poligonoWkt) {
@@ -171,9 +186,9 @@ export function LocalFormModal({
       setMapZoom(12);
     }
     setDrawMode('select');
-    setShowOutros(false);
+    setMapLayer('none');
     setError(null);
-  }, [open, initial]);
+  }, [open, initial, isCircle, isPolygon, formatChanged]);
 
   // -------- Lê o polígono do store do Terra Draw e reflete no WKT.
   // O centro (circleState) NÃO é tocado aqui — ele é overlay imperativo e só
@@ -213,6 +228,8 @@ export function LocalFormModal({
     let rightClickListener: google.maps.MapsEventListener | null = null;
     let disposed = false;
     const pointColor = isEdit ? EDIT_CIRCLE_COLOR : NEW_COLOR;
+    // Só carrega o polígono salvo quando continua sendo polígono (sem trocar de formato).
+    const loadPolygon = isPolygon && !formatChanged ? (initial?.poligonoWkt ?? null) : null;
 
     const init = () => {
       if (disposed) return;
@@ -264,9 +281,9 @@ export function LocalFormModal({
       draw.on('ready', () => {
         if (disposed) return;
         // O centro NÃO entra no Terra Draw (vira overlay imperativo); só o polígono.
-        if (initial?.poligonoWkt) {
+        if (loadPolygon) {
           try {
-            draw.addFeatures([polygonFeature(parseWktPolygon(initial.poligonoWkt))]);
+            draw.addFeatures([polygonFeature(parseWktPolygon(loadPolygon))]);
           } catch (err) {
             logError('terra-draw load polygon', err);
           }
@@ -346,10 +363,11 @@ export function LocalFormModal({
       drawRef.current = null;
       setDrawReady(false);
     };
-  }, [open, isLoaded, map, isEdit, initial, syncFromStore]);
+  }, [open, isLoaded, map, isEdit, isPolygon, formatChanged, initial, syncFromStore]);
 
   // -------- Centro + círculo do raio (overlay imperativo): refletem circleState
-  // + form.raio. clickable:false — nada no mapa interage com eles.
+  // + form.raio. clickable:false — nada no mapa interage com eles. Só existe no
+  // formato círculo (no polígono circleState permanece null).
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
     circleRef.current?.setMap(null);
@@ -388,52 +406,97 @@ export function LocalFormModal({
     });
   }, [open, isLoaded, map, circleState, form.raio, isEdit]);
 
-  // -------- Camada "Todos os Locais" (verde, omitindo o registro em edição)
+  // -------- Camadas "todos os ..." (verde, omitindo o registro em edição)
   useEffect(() => {
     if (!open || !isLoaded || !map) return;
-    outrosInfoRef.current?.close();
-    outrosPolygonsRef.current.forEach((p) => p.setMap(null));
-    outrosPolygonsRef.current = [];
-    if (!showOutros) return;
-    const filtered = allLocais.filter(
-      (l) => l.poligonoWkt && (!initial || l.idLocal !== initial.idLocal),
-    );
-    filtered.forEach((local) => {
-      let path: LatLngLiteral[];
-      try {
-        path = parseWktPolygon(local.poligonoWkt as string);
-      } catch (err) {
-        logError('parseWktPolygon outros', err, { idLocal: local.idLocal });
-        return;
-      }
-      const polygon = new google.maps.Polygon({
-        map,
-        paths: path,
-        strokeColor: OTHER_COLOR,
-        strokeOpacity: 0.9,
-        strokeWeight: 2,
-        fillColor: OTHER_COLOR,
-        fillOpacity: 0.25,
-        clickable: true,
-        zIndex: 1,
-      });
-      polygon.addListener('click', () => {
-        outrosInfoRef.current?.close();
-        const iw = new google.maps.InfoWindow({
-          content: infoHtml(local),
-          position: centroidOf(path),
-        });
-        iw.open({ map });
-        outrosInfoRef.current = iw;
-      });
-      outrosPolygonsRef.current.push(polygon);
-    });
-    return () => {
+    const clear = () => {
       outrosInfoRef.current?.close();
       outrosPolygonsRef.current.forEach((p) => p.setMap(null));
       outrosPolygonsRef.current = [];
+      outrosCirclesRef.current.forEach((c) => c.setMap(null));
+      outrosCirclesRef.current = [];
+      outrosMarkersRef.current.forEach((m) => m.setMap(null));
+      outrosMarkersRef.current = [];
     };
-  }, [open, isLoaded, map, showOutros, allLocais, initial]);
+    clear();
+    if (mapLayer === 'none') return;
+    const others = allLocais.filter((l) => !initial || l.idLocal !== initial.idLocal);
+    const showCircles = mapLayer === 'circles' || mapLayer === 'all';
+    const showPolygons = mapLayer === 'polygons' || mapLayer === 'all';
+
+    const openInfo = (local: LocalDTO, position: google.maps.LatLngLiteral) => {
+      outrosInfoRef.current?.close();
+      const iw = new google.maps.InfoWindow({ content: infoHtml(local), position });
+      iw.open({ map });
+      outrosInfoRef.current = iw;
+    };
+
+    if (showPolygons) {
+      others
+        .filter((l) => l.tipoLocal === 2 && l.poligonoWkt)
+        .forEach((local) => {
+          let path: LatLngLiteral[];
+          try {
+            path = parseWktPolygon(local.poligonoWkt as string);
+          } catch (err) {
+            logError('parseWktPolygon outros', err, { idLocal: local.idLocal });
+            return;
+          }
+          const polygon = new google.maps.Polygon({
+            map,
+            paths: path,
+            strokeColor: OTHER_COLOR,
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            fillColor: OTHER_COLOR,
+            fillOpacity: 0.25,
+            clickable: true,
+            zIndex: 1,
+          });
+          polygon.addListener('click', () => openInfo(local, centroidOf(path)));
+          outrosPolygonsRef.current.push(polygon);
+        });
+    }
+
+    if (showCircles) {
+      others
+        .filter((l) => l.tipoLocal === 1 && l.latitude != null && l.longitude != null)
+        .forEach((local) => {
+          const center = { lat: local.latitude as number, lng: local.longitude as number };
+          const circle = new google.maps.Circle({
+            map,
+            center,
+            radius: local.raio ?? 0,
+            strokeColor: OTHER_COLOR,
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            fillColor: OTHER_COLOR,
+            fillOpacity: 0.25,
+            clickable: true,
+            zIndex: 1,
+          });
+          const marker = new google.maps.Marker({
+            map,
+            position: center,
+            icon: {
+              path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+              scale: 4,
+              fillColor: OTHER_COLOR,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 1.5,
+            },
+            zIndex: 2,
+          });
+          circle.addListener('click', () => openInfo(local, center));
+          marker.addListener('click', () => openInfo(local, center));
+          outrosCirclesRef.current.push(circle);
+          outrosMarkersRef.current.push(marker);
+        });
+    }
+
+    return clear;
+  }, [open, isLoaded, map, mapLayer, allLocais, initial]);
 
   // -------- Limpeza geral ao fechar
   useEffect(() => {
@@ -445,6 +508,10 @@ export function LocalFormModal({
     outrosInfoRef.current?.close();
     outrosPolygonsRef.current.forEach((p) => p.setMap(null));
     outrosPolygonsRef.current = [];
+    outrosCirclesRef.current.forEach((c) => c.setMap(null));
+    outrosCirclesRef.current = [];
+    outrosMarkersRef.current.forEach((m) => m.setMap(null));
+    outrosMarkersRef.current = [];
   }, [open]);
 
   // -------- Handlers de desenho (delegam ao Terra Draw)
@@ -485,31 +552,66 @@ export function LocalFormModal({
   }, []);
 
   const radiusNum = Number(form.raio);
-  const isValid = useMemo(
-    () =>
+  const isValid = useMemo(() => {
+    const baseOk =
       form.codigoPonto.trim().length > 0 &&
       form.endereco.trim().length > 0 &&
-      form.pontoParada.trim().length > 0 &&
-      Number.isFinite(radiusNum) &&
-      radiusNum > 0 &&
-      circleState != null,
-    [form, radiusNum, circleState],
-  );
+      form.pontoParada.trim().length > 0;
+    if (isCircle) {
+      return baseOk && Number.isFinite(radiusNum) && radiusNum > 0 && circleState != null;
+    }
+    return baseOk && poligonoWkt != null;
+  }, [form, radiusNum, circleState, poligonoWkt, isCircle]);
 
   const handleSubmit = async () => {
-    if (!isValid || !circleState) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const local = await submit({
-        codigoPonto: form.codigoPonto.trim(),
-        endereco: form.endereco.trim(),
+    if (!isValid) return;
+    const codigoPonto = form.codigoPonto.trim();
+    const endereco = form.endereco.trim();
+    const pontoParada = form.pontoParada.trim();
+    let body: LocalUpsertBody;
+    if (isCircle) {
+      if (!circleState) return;
+      body = {
+        tipoLocal: 1,
+        codigoPonto,
+        endereco,
         latitude: circleState.lat,
         longitude: circleState.lng,
         raio: radiusNum,
-        pontoParada: form.pontoParada.trim(),
+        pontoParada,
+        poligonoWkt: null,
+      };
+    } else {
+      if (!poligonoWkt) return;
+      // lat/lng do polígono: mantém o existente; se não houver, usa o centróide.
+      let lat = initial?.latitude ?? null;
+      let lng = initial?.longitude ?? null;
+      if (lat == null || lng == null) {
+        try {
+          const c = centroidOf(parseWktPolygon(poligonoWkt));
+          lat = c.lat;
+          lng = c.lng;
+        } catch (err) {
+          logError('centroid polygon', err);
+          setError('Polígono inválido.');
+          return;
+        }
+      }
+      body = {
+        tipoLocal: 2,
+        codigoPonto,
+        endereco,
+        latitude: lat,
+        longitude: lng,
+        raio: null,
+        pontoParada,
         poligonoWkt,
-      });
+      };
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const local = await submit(body);
       onSaved(local);
     } catch (err) {
       logError('save local', err);
@@ -525,13 +627,18 @@ export function LocalFormModal({
 
   const drawingPoint = drawMode === 'point';
   const drawingPolygon = drawMode === 'polygon';
+  const tipoNome = isCircle ? 'Círculo' : 'Polígono';
 
   return (
     <Modal
       open={open}
       onClose={onClose}
       size="xl"
-      title={isEdit ? `Editar local — ${initial?.codigoPonto ?? ''}` : 'Novo local'}
+      title={
+        isEdit
+          ? `Editar local — ${initial?.codigoPonto ?? ''} (${tipoNome})`
+          : `Novo local — ${tipoNome}`
+      }
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={saving}>
@@ -559,14 +666,16 @@ export function LocalFormModal({
             onChange={(e) => setForm((p) => ({ ...p, endereco: e.target.value }))}
             maxLength={500}
           />
-          <Input
-            label="Raio (m) *"
-            name="raio"
-            type="number"
-            min={1}
-            value={form.raio}
-            onChange={(e) => setForm((p) => ({ ...p, raio: e.target.value }))}
-          />
+          {isCircle && (
+            <Input
+              label="Raio (m) *"
+              name="raio"
+              type="number"
+              min={1}
+              value={form.raio}
+              onChange={(e) => setForm((p) => ({ ...p, raio: e.target.value }))}
+            />
+          )}
           <Input
             label="Ponto de Parada *"
             name="pontoParada"
@@ -576,20 +685,24 @@ export function LocalFormModal({
           />
 
           <div className="mt-2 rounded-md border border-brand-line bg-brand-line-soft p-3 text-[11px] text-brand-ink-muted">
-            <p>
-              <strong>Obrigatório:</strong> clique em “Desenhar círculo” e toque no mapa para
-              posicionar o ponto (latitude/longitude). O raio vem do campo acima.
-            </p>
-            <p className="mt-1">
-              <strong>Recomendado:</strong> clique em “Desenhar polígono” e toque no mapa para
-              adicionar os vértices. A partir do 3º vértice, <strong>clique com o botão direito</strong>{' '}
-              (ou no primeiro ponto) para fechar — ele fica <span className="text-green-700">verde</span>.
-            </p>
-            <p className="mt-1">
-              Depois de fechado, clique no polígono e arraste os vértices para ajustar o formato.
-            </p>
-            {!poligonoWkt && (
-              <p className="mt-2 text-amber-700">⚠ Recomendamos cadastrar o polígono do local.</p>
+            {isCircle ? (
+              <p>
+                <strong>Círculo:</strong> clique em “Desenhar círculo” e toque no mapa para
+                posicionar o centro (latitude/longitude). O raio vem do campo acima.
+              </p>
+            ) : (
+              <>
+                <p>
+                  <strong>Polígono:</strong> clique em “Desenhar polígono” e toque no mapa para
+                  adicionar os vértices. A partir do 3º vértice,{' '}
+                  <strong>clique com o botão direito</strong> (ou no primeiro ponto) para fechar —
+                  ele fica <span className="text-green-700">verde</span>.
+                </p>
+                <p className="mt-1">
+                  Depois de fechado, clique no polígono e arraste os vértices para ajustar o
+                  formato.
+                </p>
+              </>
             )}
           </div>
 
@@ -602,77 +715,68 @@ export function LocalFormModal({
 
         <div className="flex min-h-[320px] flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            {circleState ? (
-              <button
-                type="button"
-                onClick={clearCircle}
-                className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-                Apagar círculo / marker
-              </button>
-            ) : drawingPoint ? (
-              <button
-                type="button"
-                onClick={cancelDraw}
-                className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
-              >
-                <PinIcon className="h-3.5 w-3.5" />
-                Clique no mapa… (cancelar)
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={startPoint}
-                disabled={!drawReady}
-                className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
-              >
-                <PinIcon className="h-3.5 w-3.5" />
-                Desenhar círculo
-              </button>
-            )}
-            {poligonoWkt ? (
-              <button
-                type="button"
-                onClick={clearPolygon}
-                className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-                Apagar polígono
-              </button>
-            ) : drawingPolygon ? (
-              <button
-                type="button"
-                onClick={cancelDraw}
-                className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
-              >
-                <PolygonOutlineIcon className="h-3.5 w-3.5" />
-                Fechando no 1º ponto / duplo-clique (cancelar)
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={startPolygon}
-                disabled={!drawReady}
-                className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
-              >
-                <PolygonOutlineIcon className="h-3.5 w-3.5" />
-                Desenhar polígono
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowOutros((v) => !v)}
-              className={`${DRAW_BUTTON_BASE} ${
-                showOutros
-                  ? 'border border-green-600 bg-green-50 text-green-800 hover:bg-green-100'
-                  : 'border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line'
-              }`}
-              aria-pressed={showOutros}
-            >
-              <LayersIcon className="h-3.5 w-3.5" />
-              {showOutros ? 'Ocultar todos os locais' : 'Todos os locais'}
-            </button>
+            {isCircle &&
+              (circleState ? (
+                <button
+                  type="button"
+                  onClick={clearCircle}
+                  className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  Apagar círculo / marker
+                </button>
+              ) : drawingPoint ? (
+                <button
+                  type="button"
+                  onClick={cancelDraw}
+                  className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
+                >
+                  <PinIcon className="h-3.5 w-3.5" />
+                  Clique no mapa… (cancelar)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startPoint}
+                  disabled={!drawReady}
+                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
+                >
+                  <PinIcon className="h-3.5 w-3.5" />
+                  Desenhar círculo
+                </button>
+              ))}
+            {isPolygon &&
+              (poligonoWkt ? (
+                <button
+                  type="button"
+                  onClick={clearPolygon}
+                  className={`${DRAW_BUTTON_BASE} border border-red-300 bg-red-50 text-red-700 hover:border-red-500 hover:bg-red-100`}
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  Apagar polígono
+                </button>
+              ) : drawingPolygon ? (
+                <button
+                  type="button"
+                  onClick={cancelDraw}
+                  className={`${DRAW_BUTTON_BASE} border border-brand-accent bg-brand-accent-soft text-brand-ink`}
+                >
+                  <PolygonOutlineIcon className="h-3.5 w-3.5" />
+                  Fechando no 1º ponto / botão direito (cancelar)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startPolygon}
+                  disabled={!drawReady}
+                  className={`${DRAW_BUTTON_BASE} border border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line`}
+                >
+                  <PolygonOutlineIcon className="h-3.5 w-3.5" />
+                  Desenhar polígono
+                </button>
+              ))}
+
+            <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="chip" />
 
             <div className="relative flex min-w-[180px] flex-1 items-center">
               <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
@@ -702,7 +806,7 @@ export function LocalFormModal({
                   center={mapCenter}
                   zoom={mapZoom}
                   options={{
-                    streetViewControl: false,
+                    streetViewControl: true,
                     fullscreenControl: false,
                     zoomControl: true,
                     clickableIcons: false,
