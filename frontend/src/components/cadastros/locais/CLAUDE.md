@@ -94,9 +94,9 @@ O Terra Draw é dono apenas do **polígono**; o **centro/círculo é imperativo*
 
 - **Init** (`useEffect` em `open/isLoaded/map`): cria `new TerraDraw({ adapter: TerraDrawGoogleMapsAdapter({ lib: google.maps, map, coordinatePrecision: 9 }), modes: [point, polygon, select] })`. Só instancia depois que a projeção do mapa está pronta (`getProjection()` ou `projection_changed`). No `ready`, carrega **só** o polígono de `initial` via `addFeatures`, entra em `select` e marca `drawReady`.
 - **Círculo (centro)**: o `TerraDrawPointMode` serve **só para capturar o clique** — o botão "Desenhar círculo" faz `setMode('point')`; no `finish` do ponto, lê a coordenada (`getSnapshotFeature`), seta `circleState` e **remove o ponto do store** (`removeFeatures`), voltando para `select`. A partir daí o centro é puramente overlay imperativo (marker + `google.maps.Circle` do raio, ambos `clickable:false`), então **clique nenhum do mapa o move ou apaga** — só o botão "Apagar círculo". (Isso corrige o bug em que vários cliques no mapa "moviam/sumiam" o círculo, porque ele era uma feature selecionável/arrastável.)
-- **Polígono**: `TerraDrawPolygonMode` — botão "Desenhar polígono" → `setMode('polygon')`. Fecha clicando no 1º ponto **ou com o botão direito** (a partir do 3º vértice): um listener de `rightclick` do mapa dispara um `keyup` de `Enter` no `map.getDiv()` (onde o adapter escuta teclado), e o `close()` do mode valida o nº de vértices. Enquanto desenha é **vermelho**; ao fechar fica **verde** (`fillColor`/`outlineColor` em função de `feature.properties.currentlyDrawing`) e já entra **selecionado** (`selectFeature`) para arrastar vértices/midpoints (`TerraDrawSelectMode`).
+- **Polígono**: `TerraDrawPolygonMode` — botão "Desenhar polígono" → `setMode('polygon')`. Fecha clicando no 1º ponto **ou com o botão direito** (a partir do 3º vértice) — ver "Right-click fecha o polígono". Enquanto desenha é **vermelho**; ao fechar fica **verde** (`fillColor`/`outlineColor` em função de `feature.properties.currentlyDrawing`) e já entra **selecionado** (`selectFeature`) para arrastar vértices/midpoints (`TerraDrawSelectMode`).
 - **Sync**: `syncFromStore()` (no `finish` de polígono e no `change` `type === 'delete'`) lê só os polígonos do `getSnapshot()`, garante **no máximo 1** e converte o anel (`[lng,lat]`) para WKT via `pathToWktPolygon` (normaliza + orienta CCW). **Nunca** toca `circleState`.
-- **Limpeza**: o cleanup do effect remove o `rightclick` listener e chama `draw.stop()`. A biblioteca `drawing` foi removida de `MAP_LIBRARIES` ([services/googleMaps.ts](../../../services/googleMaps.ts)).
+- **Limpeza**: o cleanup do effect remove o listener `contextmenu` e chama `draw.stop()`. A biblioteca `drawing` foi removida de `MAP_LIBRARIES` ([services/googleMaps.ts](../../../services/googleMaps.ts)).
 
 ### Validação
 
@@ -112,8 +112,19 @@ Campos comuns sempre obrigatórios (`codigoPonto`, `endereco`, `pontoParada`). A
 
 ### Camadas no mapa do modal
 
-`MapLayerToggles` (variant `chip`) controlando `mapLayer`. Renderiza, em verde (`#16a34a`),
-círculos e/ou polígonos dos **outros** locais (omite o registro em edição), clicáveis com InfoWindow.
+`MapLayerToggles` (variant `chip`, prop `muted`) controlando `mapLayer`. Renderiza, em verde
+(`#16a34a`), círculos e/ou polígonos dos **outros** locais (omite o registro em edição), clicáveis
+com InfoWindow. No toolbar do modal os botões ficam **separados** por uma divisória dos botões de
+desenhar: os de desenhar (`Desenhar círculo/polígono`) têm leve destaque (`DRAW_IDLE`, borda/fundo
+accent) e os de "mostrar no mapa" ficam **ofuscados** (`muted` → `opacity-60`, volta ao normal no
+hover/foco). Na página o `MapLayerToggles` é `variant="card"` sem `muted` (intensidade normal).
+
+### Right-click fecha o polígono
+
+Um listener `contextmenu` (DOM nativo — o `rightclick` do Maps JS está deprecado) em `map.getDiv()`
+faz `preventDefault()` e dispara um `keyup` de `Enter` no mesmo elemento, onde o adapter do Terra
+Draw escuta o teclado. O `close()` do polygon mode valida o nº de vértices (não fecha com < 3). O
+keyEvent de "finish" do Terra Draw é `Enter` (default).
 
 ## WKT
 
