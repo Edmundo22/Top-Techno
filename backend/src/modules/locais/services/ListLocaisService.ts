@@ -10,6 +10,7 @@ export interface LocalDTO {
   raio: number | null;
   pontoParada: string | null;
   poligonoWkt: string | null;
+  tipoLocal: number; // 1 = círculo, 2 = polígono
 }
 
 export function mapLocalRowToDTO(row: LocalRow): LocalDTO {
@@ -22,6 +23,9 @@ export function mapLocalRowToDTO(row: LocalRow): LocalDTO {
     raio: row.RAIO,
     pontoParada: normalizePontoParada(row.PONTO_PARADA),
     poligonoWkt: row.LOCAL_GEO_WKT,
+    // Fallback p/ linhas legadas sem TIPO_LOCAL: tem polígono → 2, senão 1.
+    // Number(...) cobre o caso de bigint vir como string pelo driver.
+    tipoLocal: row.TIPO_LOCAL != null ? Number(row.TIPO_LOCAL) : row.LOCAL_GEO_WKT ? 2 : 1,
   };
 }
 

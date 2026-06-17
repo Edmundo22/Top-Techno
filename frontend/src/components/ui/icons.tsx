@@ -156,6 +156,14 @@ export function BuildingIcon(props: IconProps) {
   );
 }
 
+export function CircleIcon(props: IconProps) {
+  return (
+    <svg {...baseProps} {...props}>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
 export function PolygonOutlineIcon(props: IconProps) {
   return (
     <svg {...baseProps} {...props}>

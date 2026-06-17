@@ -182,6 +182,7 @@ export function LocaisTable({
             {sorted.map((row) => {
               const markerActive = activeMarkerId === row.idLocal;
               const poligonoActive = activePoligonoId === row.idLocal;
+              const isCircle = row.tipoLocal === 1;
               const hasPoligono = !!row.poligonoWkt;
               return (
                 <tr key={row.idLocal} className="hover:bg-brand-line-soft">
@@ -197,23 +198,27 @@ export function LocaisTable({
                   ))}
                   <td className="border-b border-brand-line px-2 py-1 text-center">
                     <div className="inline-flex items-center gap-1">
-                      <IconButton
-                        label="Mostrar marker + raio"
-                        active={markerActive}
-                        onClick={() => onToggleMarker(row.idLocal)}
-                        activeClassName="bg-red-100 text-red-700 ring-1 ring-red-300"
-                      >
-                        <PinIcon className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        label={hasPoligono ? 'Mostrar polígono' : 'Sem polígono cadastrado'}
-                        active={poligonoActive}
-                        disabled={!hasPoligono}
-                        onClick={() => onTogglePoligono(row.idLocal)}
-                        activeClassName="bg-red-100 text-red-700 ring-1 ring-red-300"
-                      >
-                        <HexIcon className="h-4 w-4" />
-                      </IconButton>
+                      {/* Mostra só o ícone do formato real: círculo → Pin, polígono → Hex. */}
+                      {isCircle ? (
+                        <IconButton
+                          label="Mostrar marker + raio"
+                          active={markerActive}
+                          onClick={() => onToggleMarker(row.idLocal)}
+                          activeClassName="bg-red-100 text-red-700 ring-1 ring-red-300"
+                        >
+                          <PinIcon className="h-4 w-4" />
+                        </IconButton>
+                      ) : (
+                        <IconButton
+                          label={hasPoligono ? 'Mostrar polígono' : 'Sem polígono cadastrado'}
+                          active={poligonoActive}
+                          disabled={!hasPoligono}
+                          onClick={() => onTogglePoligono(row.idLocal)}
+                          activeClassName="bg-red-100 text-red-700 ring-1 ring-red-300"
+                        >
+                          <HexIcon className="h-4 w-4" />
+                        </IconButton>
+                      )}
                       <IconButton
                         label="Editar"
                         onClick={() => onEdit(row)}

@@ -1,5 +1,8 @@
 import { api } from './api';
 
+// 1 = círculo (lat/lng + raio), 2 = polígono (lat/lng + WKT).
+export type TipoLocal = 1 | 2;
+
 export interface LocalDTO {
   idLocal: number;
   codigoPonto: string | null;
@@ -9,17 +12,22 @@ export interface LocalDTO {
   raio: number | null;
   pontoParada: string | null;
   poligonoWkt: string | null;
+  tipoLocal: number;
 }
 
-export interface LocalUpsertBody {
+interface LocalUpsertBase {
   codigoPonto: string;
   endereco: string;
   latitude: number;
   longitude: number;
-  raio: number;
   pontoParada: string | null;
-  poligonoWkt: string | null;
 }
+
+// União discriminada espelhando o backend: círculo tem raio (sem WKT),
+// polígono tem WKT (sem raio). lat/lng sempre presentes nos dois.
+export type LocalUpsertBody =
+  | (LocalUpsertBase & { tipoLocal: 1; raio: number; poligonoWkt: null })
+  | (LocalUpsertBase & { tipoLocal: 2; raio: null; poligonoWkt: string });
 
 interface ListResponse {
   data: { locais: LocalDTO[] };
