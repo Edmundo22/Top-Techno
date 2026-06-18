@@ -47,6 +47,10 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - Toggle de uma **linha** ativa/desativa todas as **placas** que rodam essa linha hoje — lookup em `linhaToPlacas`.
 - Multi-select em ambos. Quando há seleção, mapa restringe **veículos / rotas / locais** ao subconjunto e o toggle "Todas as rotas" é considerado implicitamente ligado para o subconjunto (`showRotasEffective = showRotas || hasSelection`).
 - Catálogo de placas é montado a partir de `veiculosComRota` (só quem tem rota); catálogo de linhas vem de `rotas.numeroLinha`.
+- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`, **azul = 1ª**, igual à rota). A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. **Só pinta os botões**; o mapa/markers **não** mudam. Não-selecionados seguem o estilo padrão.
+- **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
+- **Centralizar o par**: ao clicar numa placa, o card de linhas rola para **centralizar** a linha correspondente (e vice-versa). `PlacasFilterCard`/`LinhasFilterCard` expõem `scrollToItem(value)` via `forwardRef`/`useImperativeHandle`; o `FiltrosLateral` chama o card oposto no clique, usando `placaToLinhas`/`linhaToPlacas` para achar o par. O scroll é contido no container (cálculo de `offsetTop`, sem mexer no scroll da página).
+- Largura da coluna de filtros: `lg:w-56`.
 
 ## Polyline pulsante
 
