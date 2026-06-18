@@ -102,7 +102,7 @@ export function MapaMonitoramento({
   }, []);
 
   const mapOptions: google.maps.MapOptions = {
-    streetViewControl: false,
+    streetViewControl: true,
     fullscreenControl: true,
     zoomControl: true,
     clickableIcons: false,

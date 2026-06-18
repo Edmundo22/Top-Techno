@@ -114,8 +114,8 @@ export function MapaRota({ polyline }: MapaRotaProps) {
                 gestureHandling: 'greedy',
               }
             : {
-                // Modo pequeno: sem +/- de zoom; só o botão de tela cheia (inf. dir.).
-                streetViewControl: false,
+                // Modo pequeno: sem +/- de zoom; Street View + botão de tela cheia (inf. dir.).
+                streetViewControl: true,
                 zoomControl: false,
                 fullscreenControl: true,
                 fullscreenControlOptions: {

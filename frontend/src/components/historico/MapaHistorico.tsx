@@ -106,7 +106,7 @@ export function MapaHistorico({
   const localCirclesRef = useRef<google.maps.Circle[]>([]);
 
   const mapOptions: google.maps.MapOptions = {
-    streetViewControl: false,
+    streetViewControl: true,
     fullscreenControl: true,
     zoomControl: true,
     clickableIcons: false,
