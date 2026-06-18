@@ -100,15 +100,15 @@ export function CadastroLocaisPage() {
   return (
     <AppLayout title="Cadastros / Locais" subtitle="Gerenciamento de pontos físicos">
       <div className="flex flex-col gap-3 lg:h-[calc(100vh-140px)] lg:min-h-0">
-        <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-4 py-3 shadow-card">
-          <label className="relative flex items-center">
+        <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-3 py-3 shadow-card sm:px-4">
+          <label className="relative flex w-full items-center sm:w-auto">
             <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
             <input
               type="text"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder="Filtro universal…"
-              className="h-9 w-72 rounded-md border border-brand-line bg-white pl-9 pr-3 text-xs text-brand-ink outline-none placeholder:text-brand-ink-muted/70 transition-colors hover:border-brand-ink-soft focus:border-brand-accent"
+              className="h-9 w-full rounded-md border border-brand-line bg-white pl-9 pr-3 text-xs text-brand-ink outline-none placeholder:text-brand-ink-muted/70 transition-colors hover:border-brand-ink-soft focus:border-brand-accent sm:w-72"
             />
           </label>
 
@@ -120,11 +120,14 @@ export function CadastroLocaisPage() {
             </span>
           )}
 
-          <div className="ml-auto flex items-center gap-2">
-            <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="card" />
-            <Button onClick={openCreate}>
+          <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+            <div className="min-w-0 flex-1 sm:flex-none">
+              <MapLayerToggles value={mapLayer} onChange={setMapLayer} variant="card" />
+            </div>
+            <Button onClick={openCreate} className="shrink-0">
               <PlusIcon className="h-4 w-4" />
-              Novo local
+              <span className="hidden sm:inline">Novo local</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           </div>
         </div>

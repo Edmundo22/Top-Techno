@@ -220,15 +220,15 @@ export function MotoristaPorRotaPage() {
       <div className="flex flex-col gap-3 lg:h-[calc(100vh-140px)] lg:min-h-0 lg:flex-row">
         {/* Coluna esquerda — CRUD de motoristas */}
         <div className="flex min-h-[55vh] flex-1 flex-col gap-3 lg:min-h-0 lg:basis-[45%]">
-          <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-4 py-3 shadow-card">
-            <label className="relative flex items-center">
+          <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-card border border-brand-line bg-white px-3 py-3 shadow-card sm:px-4">
+            <label className="relative flex w-full items-center sm:w-auto">
               <SearchIcon className="pointer-events-none absolute left-3 h-4 w-4 text-brand-ink-muted" />
               <input
                 type="text"
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Filtro universal…"
-                className="h-9 w-56 rounded-md border border-brand-line bg-white pl-9 pr-3 text-xs text-brand-ink outline-none placeholder:text-brand-ink-muted/70 transition-colors hover:border-brand-ink-soft focus:border-brand-accent"
+                className="h-9 w-full rounded-md border border-brand-line bg-white pl-9 pr-3 text-xs text-brand-ink outline-none placeholder:text-brand-ink-muted/70 transition-colors hover:border-brand-ink-soft focus:border-brand-accent sm:w-56"
               />
             </label>
 
@@ -238,10 +238,11 @@ export function MotoristaPorRotaPage() {
               </span>
             )}
 
-            <div className="ml-auto">
+            <div className="ml-auto shrink-0">
               <Button onClick={openCreate}>
                 <PlusIcon className="h-4 w-4" />
-                Novo motorista
+                <span className="hidden sm:inline">Novo motorista</span>
+                <span className="sm:hidden">Novo</span>
               </Button>
             </div>
           </div>

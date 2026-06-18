@@ -157,7 +157,7 @@ export function HistoricoPage() {
           </div>
 
           {/* Meio — cards informativos com toggle */}
-          <div className="mx-auto flex flex-wrap items-center gap-2 self-center">
+          <div className="flex flex-wrap items-center gap-2 lg:mx-auto lg:self-center">
             <StatToggleCard
               icon={
                 showPosicoes ? (
@@ -193,7 +193,7 @@ export function HistoricoPage() {
           </div>
 
           {/* Direita — toggles de camadas */}
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-row flex-wrap items-center gap-2 lg:flex-col lg:items-end">
             <ToggleChip
               active={showRotas}
               onClick={() => setShowRotas((v) => !v)}
@@ -218,14 +218,14 @@ export function HistoricoPage() {
         )}
 
         <section className="flex flex-col gap-3 lg:min-h-[480px] lg:flex-1 lg:flex-row">
-          <div className="h-[40vh] w-full shrink-0 lg:h-auto lg:w-44">
+          <div className="w-full shrink-0 lg:w-56">
             <PlacasFilterCard
               placas={placasAtivas}
               selectedPlacas={selectedPlacas}
               onTogglePlaca={handleTogglePlaca}
             />
           </div>
-          <div className="min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
+          <div className="min-h-[60vh] min-w-0 flex-1 lg:min-h-0">
             <MapaHistorico
               posicoes={posicoesFiltradas}
               rotas={rotas}

@@ -51,6 +51,10 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
 - **Centralizar o par**: ao clicar numa placa, o card de linhas rola para **centralizar** a linha correspondente (e vice-versa). `PlacasFilterCard`/`LinhasFilterCard` expõem `scrollToItem(value)` via `forwardRef`/`useImperativeHandle`; o `FiltrosLateral` chama o card oposto no clique, usando `placaToLinhas`/`linhaToPlacas` para achar o par. O scroll é contido no container (cálculo de `offsetTop`, sem mexer no scroll da página).
 - Largura da coluna de filtros: `lg:w-56`.
+- **Mobile**: os cards de filtro viram **strips horizontais roláveis** (`flex` + `overflow-x-auto`,
+  pills `shrink-0 whitespace-nowrap`) e voltam a lista vertical em `lg` (`lg:flex-col`). O
+  `FiltrosLateral` fica com altura automática no mobile (sem `40vh`) para o mapa ser o herói; o
+  `scrollToItem` centraliza no eixo que estiver rolando (vertical no `lg`, horizontal no mobile).
 
 ## Polyline pulsante
 

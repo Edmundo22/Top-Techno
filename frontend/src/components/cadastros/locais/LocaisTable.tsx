@@ -113,16 +113,16 @@ export function LocaisTable({
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse text-[10px] sm:text-xs">
           <thead className="sticky top-0 z-10 bg-brand-line-soft">
             <tr>
               {COLUMNS.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
-                  className={`select-none border-b border-brand-line px-3 py-2 text-${
+                  className={`select-none border-b border-brand-line px-1.5 py-2 text-${
                     c.align ?? 'left'
-                  } font-semibold text-brand-ink`}
+                  } font-semibold text-brand-ink sm:px-3`}
                 >
                   <button
                     type="button"
@@ -189,9 +189,9 @@ export function LocaisTable({
                   {COLUMNS.map((c) => (
                     <td
                       key={c.key}
-                      className={`border-b border-brand-line px-3 py-1.5 text-${
+                      className={`border-b border-brand-line px-1.5 py-1.5 text-${
                         c.align ?? 'left'
-                      } text-brand-ink`}
+                      } align-top text-brand-ink sm:px-3`}
                     >
                       {asText(row[c.key])}
                     </td>

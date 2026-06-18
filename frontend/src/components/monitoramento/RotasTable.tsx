@@ -43,14 +43,14 @@ export function RotasTable({
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto">
-          <table className="min-w-full text-left text-xs">
+          <table className="w-full text-left text-[11px] sm:text-xs">
             <thead className="sticky top-0 z-10 bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted shadow-[0_1px_0_0_var(--color-line)]">
               <tr>
-                <th className="px-5 py-2 font-semibold">Linha</th>
-                <th className="px-5 py-2 font-semibold">Status viagem</th>
-                <th className="px-5 py-2 font-semibold">Placa</th>
-                <th className="px-5 py-2 font-semibold">Data início</th>
-                <th className="px-5 py-2 font-semibold">Data fim</th>
+                <th className="px-2 py-2 sm:px-5 font-semibold">Linha</th>
+                <th className="px-2 py-2 sm:px-5 font-semibold">Status viagem</th>
+                <th className="px-2 py-2 sm:px-5 font-semibold">Placa</th>
+                <th className="px-2 py-2 sm:px-5 font-semibold">Data início</th>
+                <th className="px-2 py-2 sm:px-5 font-semibold">Data fim</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-line">
@@ -67,11 +67,11 @@ export function RotasTable({
                         : 'hover:bg-brand-line-soft/50'
                     }`}
                   >
-                    <td className="px-5 py-2 font-semibold tabular-nums">{r.numeroLinha ?? '—'}</td>
-                    <td className="px-5 py-2">{r.statusLabel ?? '—'}</td>
-                    <td className="px-5 py-2 font-semibold">{r.placa ?? '—'}</td>
-                    <td className="px-5 py-2">{formatBRDateTime(r.dtIniViagem)}</td>
-                    <td className="px-5 py-2">{formatBRDateTime(r.dtFimViagem)}</td>
+                    <td className="px-2 py-2 sm:px-5 font-semibold tabular-nums">{r.numeroLinha ?? '—'}</td>
+                    <td className="px-2 py-2 sm:px-5">{r.statusLabel ?? '—'}</td>
+                    <td className="px-2 py-2 sm:px-5 font-semibold">{r.placa ?? '—'}</td>
+                    <td className="px-2 py-2 sm:px-5">{formatBRDateTime(r.dtIniViagem)}</td>
+                    <td className="px-2 py-2 sm:px-5">{formatBRDateTime(r.dtFimViagem)}</td>
                   </tr>
                 );
               })}

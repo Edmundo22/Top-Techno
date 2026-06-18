@@ -225,7 +225,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                         to={child.to}
                         onClick={onNavigate}
                         className={({ isActive }) =>
-                          `flex h-8 items-center rounded-lg px-3 text-sm transition-colors ${
+                          `flex h-9 items-center rounded-lg px-3 text-sm transition-colors ${
                             isActive ? linkActive : linkInactive
                           }`
                         }

@@ -16,9 +16,9 @@ export function Topbar({ title, subtitle, onOpenNav }: TopbarProps) {
         type="button"
         onClick={onOpenNav}
         aria-label="Abrir menu"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-brand-ink-soft transition-colors hover:bg-brand-line-soft lg:hidden"
+        className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-lg text-brand-ink-soft transition-colors hover:bg-brand-line-soft active:bg-brand-line lg:hidden"
       >
-        <MenuIcon className="h-5 w-5" />
+        <MenuIcon className="h-6 w-6" />
       </button>
 
       <div className="flex min-w-0 flex-col leading-tight">

@@ -48,7 +48,7 @@ export function StatToggleCard({
       aria-pressed={active}
       disabled={disabled}
       title={title}
-      className={`flex h-12 min-w-[200px] items-center gap-3 rounded-card border px-3 text-left shadow-card transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-brand-line ${
+      className={`flex h-12 min-w-[150px] flex-1 items-center gap-3 rounded-card border px-3 text-left shadow-card transition-colors disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:border-brand-line sm:min-w-[200px] sm:flex-none ${
         active
           ? ACTIVE_VARIANTS[variant]
           : 'border-brand-line bg-white text-brand-ink hover:border-brand-ink-soft hover:bg-brand-line-soft'

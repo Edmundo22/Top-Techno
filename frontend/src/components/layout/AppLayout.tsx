@@ -19,11 +19,13 @@ export function AppLayout({ title, subtitle, children }: AppLayoutProps) {
   }, [location.pathname]);
 
   return (
-    <div className="flex h-full min-h-screen w-full bg-brand-line-soft">
+    <div className="flex h-full min-h-[100dvh] w-full overflow-x-hidden bg-brand-line-soft">
       <Sidebar mobileOpen={mobileNavOpen} onCloseMobile={() => setMobileNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar title={title} subtitle={subtitle} onOpenNav={() => setMobileNavOpen(true)} />
-        <main className="flex-1 overflow-y-auto px-3 pt-4 pb-[3vh] sm:px-6 sm:pt-6">{children}</main>
+        <main className="flex-1 overflow-y-auto px-3 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pt-6">
+          {children}
+        </main>
       </div>
     </div>
   );

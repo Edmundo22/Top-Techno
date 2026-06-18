@@ -21,15 +21,21 @@ export const LinhasFilterCard = forwardRef<FilterCardHandle, LinhasFilterCardPro
         const el = itemRefs.current.get(value);
         const container = listRef.current;
         if (!el || !container) return;
+        // Centraliza no eixo que estiver rolando (vertical no lg, horizontal no mobile).
         const top = el.offsetTop - container.clientHeight / 2 + el.offsetHeight / 2;
-        container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        const left = el.offsetLeft - container.clientWidth / 2 + el.offsetWidth / 2;
+        container.scrollTo({
+          top: Math.max(0, top),
+          left: Math.max(0, left),
+          behavior: 'smooth',
+        });
       },
     }));
 
     const selectedCount = linhas.filter((l) => selectedLinhas.includes(l)).length;
 
     return (
-      <section className="flex h-full min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card">
+      <section className="flex min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card lg:h-full">
         <header className="flex items-center justify-between gap-2 px-1 pt-0.5">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-ink-soft">
             <RouteIcon className="h-3.5 w-3.5" />
@@ -46,7 +52,10 @@ export const LinhasFilterCard = forwardRef<FilterCardHandle, LinhasFilterCardPro
             </span>
           </span>
         </header>
-        <div ref={listRef} className="relative flex flex-col gap-1.5 overflow-y-auto pr-0.5">
+        <div
+          ref={listRef}
+          className="relative flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0 lg:pr-0.5"
+        >
           {linhas.length === 0 ? (
             <span className="px-1 py-2 text-[11px] text-brand-ink-muted">
               Nenhuma linha
@@ -68,7 +77,7 @@ export const LinhasFilterCard = forwardRef<FilterCardHandle, LinhasFilterCardPro
                   style={
                     color ? { backgroundColor: color, borderColor: color, color: '#ffffff' } : undefined
                   }
-                  className={`rounded-full border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors ${
+                  className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold tabular-nums transition-colors lg:shrink ${
                     active
                       ? color
                         ? 'hover:opacity-90'
