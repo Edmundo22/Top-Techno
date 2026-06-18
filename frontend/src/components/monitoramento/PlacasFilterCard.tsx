@@ -34,15 +34,21 @@ export const PlacasFilterCard = forwardRef<FilterCardHandle, PlacasFilterCardPro
         const container = listRef.current;
         if (!el || !container) return;
         // Centraliza dentro do próprio container (sem mexer no scroll da página).
+        // Funciona tanto na lista vertical (lg) quanto no strip horizontal (mobile).
         const top = el.offsetTop - container.clientHeight / 2 + el.offsetHeight / 2;
-        container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        const left = el.offsetLeft - container.clientWidth / 2 + el.offsetWidth / 2;
+        container.scrollTo({
+          top: Math.max(0, top),
+          left: Math.max(0, left),
+          behavior: 'smooth',
+        });
       },
     }));
 
     const selectedCount = placas.filter((p) => selectedPlacas.includes(p)).length;
 
     return (
-      <section className="flex h-full min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card">
+      <section className="flex min-h-0 flex-col gap-2 rounded-card border border-brand-line bg-white p-2 shadow-card lg:h-full">
         <header className="flex items-center justify-between gap-2 px-1 pt-0.5">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-brand-ink-soft">
             <CarIcon className="h-3.5 w-3.5" />
@@ -59,7 +65,10 @@ export const PlacasFilterCard = forwardRef<FilterCardHandle, PlacasFilterCardPro
             </span>
           </span>
         </header>
-        <div ref={listRef} className="relative flex flex-col gap-1.5 overflow-y-auto pr-0.5">
+        <div
+          ref={listRef}
+          className="relative flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:pb-0 lg:pr-0.5"
+        >
           {placas.length === 0 ? (
             <span className="px-1 py-2 text-[11px] text-brand-ink-muted">
               Nenhuma placa
@@ -78,7 +87,7 @@ export const PlacasFilterCard = forwardRef<FilterCardHandle, PlacasFilterCardPro
                     if (el) itemRefs.current.set(placa, el);
                     else itemRefs.current.delete(placa);
                   }}
-                  className="flex items-stretch gap-1"
+                  className="flex shrink-0 items-stretch gap-1 lg:shrink"
                 >
                   <button
                     type="button"
@@ -87,7 +96,7 @@ export const PlacasFilterCard = forwardRef<FilterCardHandle, PlacasFilterCardPro
                     style={
                       color ? { backgroundColor: color, borderColor: color, color: '#ffffff' } : undefined
                     }
-                    className={`min-w-0 flex-1 truncate rounded-full border px-2 py-1 text-[11px] font-semibold tabular-nums transition-colors ${
+                    className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold tabular-nums transition-colors lg:min-w-0 lg:flex-1 lg:truncate ${
                       active
                         ? color
                           ? 'hover:opacity-90'

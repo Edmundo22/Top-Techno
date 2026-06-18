@@ -51,16 +51,16 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
         </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto">
-          <table className="min-w-full text-left text-xs">
+          <table className="w-full text-left text-[10px] sm:text-xs">
             <thead className="sticky top-0 z-10 bg-brand-line-soft text-[11px] uppercase tracking-wider text-brand-ink-muted shadow-[0_1px_0_0_var(--color-line)]">
               <tr>
-                <th className="px-5 py-2 font-semibold">Ordem</th>
-                <th className="px-5 py-2 font-semibold">Local</th>
-                <th className="px-5 py-2 font-semibold">Ent. prev.</th>
-                <th className="px-5 py-2 font-semibold">Ent. real</th>
-                <th className="px-5 py-2 font-semibold">Saí. prev.</th>
-                <th className="px-5 py-2 font-semibold">Saí. real</th>
-                <th className="px-5 py-2 font-semibold">T. dentro</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Ordem</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Local</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Ent. prev.</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Ent. real</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Saí. prev.</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">Saí. real</th>
+                <th className="px-1.5 py-2 sm:px-5 font-semibold">T. dentro</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-line">
@@ -72,17 +72,17 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
                     key={`${idViagem}-${e.ordem ?? idx}`}
                     className="text-brand-ink"
                   >
-                    <td className="px-5 py-2 tabular-nums">{e.ordem ?? '—'}</td>
-                    <td className="px-5 py-2">{e.local ?? '—'}</td>
-                    <td className="px-5 py-2 tabular-nums">{e.entPrev ?? '—'}</td>
-                    <td className={`px-5 py-2 tabular-nums ${entBg}`}>
+                    <td className="px-1.5 py-2 sm:px-5 tabular-nums">{e.ordem ?? '—'}</td>
+                    <td className="px-1.5 py-2 sm:px-5">{e.local ?? '—'}</td>
+                    <td className="px-1.5 py-2 sm:px-5 tabular-nums">{e.entPrev ?? '—'}</td>
+                    <td className={`px-1.5 py-2 sm:px-5 tabular-nums ${entBg}`}>
                       {e.entReal ?? '—'}
                     </td>
-                    <td className="px-5 py-2 tabular-nums">{e.saiPrev ?? '—'}</td>
-                    <td className={`px-5 py-2 tabular-nums ${saiBg}`}>
+                    <td className="px-1.5 py-2 sm:px-5 tabular-nums">{e.saiPrev ?? '—'}</td>
+                    <td className={`px-1.5 py-2 sm:px-5 tabular-nums ${saiBg}`}>
                       {e.saiReal ?? '—'}
                     </td>
-                    <td className="px-5 py-2 tabular-nums">
+                    <td className="px-1.5 py-2 sm:px-5 tabular-nums">
                       {formatTDentro(e.tDentroMin)}
                     </td>
                   </tr>

@@ -24,35 +24,35 @@ export function VinculadosTable({
         <span className="text-[11px] text-brand-ink-muted">{vinculados.length} vínculo(s)</span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="min-w-full text-left text-xs">
+        <table className="w-full text-left text-[11px] sm:text-xs">
           <thead className="sticky top-0 z-10 bg-brand-line-soft shadow-[0_1px_0_0_var(--color-line)]">
             <tr>
-              <th className="px-3 py-2 font-semibold text-brand-ink">Motorista</th>
-              <th className="px-3 py-2 font-semibold text-brand-ink">CNH</th>
-              <th className="px-3 py-2 text-center font-semibold text-brand-ink">Titular</th>
-              <th className="px-3 py-2 text-center font-semibold text-brand-ink">Ações</th>
+              <th className="px-2 sm:px-3 py-2 font-semibold text-brand-ink">Motorista</th>
+              <th className="px-2 sm:px-3 py-2 font-semibold text-brand-ink">CNH</th>
+              <th className="px-2 sm:px-3 py-2 text-center font-semibold text-brand-ink">Titular</th>
+              <th className="px-2 sm:px-3 py-2 text-center font-semibold text-brand-ink">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-line">
             {loading && vinculados.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-brand-ink-muted">
+                <td colSpan={4} className="px-2 sm:px-3 py-6 text-center text-brand-ink-muted">
                   Carregando…
                 </td>
               </tr>
             )}
             {!loading && vinculados.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-brand-ink-muted">
+                <td colSpan={4} className="px-2 sm:px-3 py-6 text-center text-brand-ink-muted">
                   Nenhum motorista vinculado a esta rota.
                 </td>
               </tr>
             )}
             {vinculados.map((v) => (
               <tr key={v.idCadMotRota} className="hover:bg-brand-line-soft">
-                <td className="px-3 py-1.5 text-brand-ink">{v.motorista ?? '-'}</td>
-                <td className="px-3 py-1.5 text-brand-ink">{v.cnh ?? '-'}</td>
-                <td className="px-3 py-1.5 text-center">
+                <td className="px-2 sm:px-3 py-1.5 text-brand-ink">{v.motorista ?? '-'}</td>
+                <td className="px-2 sm:px-3 py-1.5 text-brand-ink">{v.cnh ?? '-'}</td>
+                <td className="px-2 sm:px-3 py-1.5 text-center">
                   <input
                     type="checkbox"
                     checked={v.titular}
@@ -62,7 +62,7 @@ export function VinculadosTable({
                     aria-label={`Definir ${v.motorista ?? ''} como titular`}
                   />
                 </td>
-                <td className="px-3 py-1 text-center">
+                <td className="px-2 sm:px-3 py-1 text-center">
                   <button
                     type="button"
                     title="Desvincular da rota"

@@ -26,6 +26,17 @@ body,
   height: 100%;
 }
 
+html {
+  /* Não deixa o iOS inflar o texto em landscape; respeita nosso dimensionamento. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Evita scroll horizontal acidental da página inteira no celular. */
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

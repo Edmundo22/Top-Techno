@@ -50,8 +50,8 @@ export function FiltrosLateral({
   };
 
   return (
-    <aside className="flex h-[40vh] w-full shrink-0 flex-col gap-2 overflow-hidden lg:h-auto lg:w-56">
-      <div className="min-h-0 flex-1 overflow-hidden">
+    <aside className="flex w-full shrink-0 flex-col gap-2 lg:w-56">
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-hidden">
         <PlacasFilterCard
           ref={placasRef}
           placas={placas}
@@ -62,7 +62,7 @@ export function FiltrosLateral({
           colorByPlaca={colorByPlaca}
         />
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-hidden">
         <LinhasFilterCard
           ref={linhasRef}
           linhas={linhas}

@@ -64,10 +64,29 @@ src/
 
 ## Responsividade
 
-Layout mobile-first com breakpoint principal `lg` (1024px):
-- **Sidebar** ([components/layout/Sidebar.tsx](src/components/layout/Sidebar.tsx)): em `lg+` é a `aside` fixa (com colapso); em telas menores vira **drawer off-canvas** (menu sanduíche), aberto pelo botão de menu no `Topbar`. O estado `mobileOpen` vive no `AppLayout`; fecha ao trocar de rota, clicar no overlay ou no "x".
-- **Topbar**: botão de menu (`MenuIcon`) só em `< lg`; nome/email do usuário escondem em telas pequenas (`hidden sm:flex`).
-- **Páginas**: as áreas tabela+mapa / filtro+mapa empilham (`flex-col lg:flex-row`); alturas fixas (`h-[calc(100vh-140px)]`, `min-h-[480px]`) ficam só em `lg`, com alturas em `vh` no mobile para o conteúdo não colapsar.
+Layout mobile-first com breakpoint principal `lg` (1024px). O alvo no celular é
+"app-like": mapa como herói, controles compactos e nada de scroll horizontal da página.
+
+- **Navegação**: mantém o **drawer hambúrguer** (não há bottom nav). Em `lg+` a `aside` é fixa
+  (com colapso); em `< lg` vira drawer off-canvas, aberto pelo `MenuIcon` no `Topbar`. O estado
+  `mobileOpen` vive no `AppLayout`; fecha ao trocar de rota, clicar no overlay ou no "x". Alvos
+  de toque ampliados no mobile (hambúrguer `h-10`, itens do drawer `h-9`).
+- **Fundação** ([AppLayout.tsx](src/components/layout/AppLayout.tsx) + [globals.css](src/styles/globals.css)):
+  `min-h-[100dvh]` (evita o "pulo" da barra do browser no iOS), `overflow-x-hidden` na raiz e no
+  `body`, `text-size-adjust: 100%`, e padding inferior do `main` com `env(safe-area-inset-bottom)`.
+  O viewport (`index.html`) **não** bloqueia zoom — pinch-zoom é a forma de ler detalhes densos.
+- **Dashboards (Monitoramento/Histórico)**: no mobile o mapa é o herói (`min-h-[60vh]`+). Os
+  cards de controle do topo são compactos e quebram em linha (`flex-wrap`; `mx-auto`/`items-end`
+  só em `lg`); os cards de stat ganham `flex-1` no mobile (`sm:flex-none`). Os filtros laterais
+  (placas/linhas) viram **strips horizontais roláveis** no celular e voltam a ser sidebar
+  vertical em `lg` — ver [components/monitoramento/CLAUDE.md](src/components/monitoramento/CLAUDE.md).
+- **Tabelas**: encolhem para caber **inteiras na largura** do celular (fonte `text-[10px]/[11px]`,
+  padding `px-1.5/px-2`, células com `align-top` e quebra de linha — sem truncar, para o pinch-zoom
+  conseguir ler tudo). Em `sm+` voltam ao tamanho normal. Botões de ação seguem em tamanho tocável.
+- **Páginas**: as áreas tabela+mapa / filtro+mapa empilham (`flex-col lg:flex-row`); alturas fixas
+  (`h-[calc(100vh-140px)]`, `min-h-[480px]`) ficam só em `lg`, com alturas em `vh`/`dvh` no mobile
+  para o conteúdo não colapsar. Larguras mínimas que forçariam scroll horizontal (`min-w-[360px]`)
+  são `min-w-0` no mobile e voltam em `sm+`.
 
 ## UI primitivos
 

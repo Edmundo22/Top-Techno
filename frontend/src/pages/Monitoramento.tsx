@@ -385,7 +385,7 @@ export function MonitoramentoPage() {
           </div>
 
           {/* Meio — card informativo (sempre on) + toggle (sem rota) */}
-          <div className="mx-auto flex flex-wrap items-center gap-2 self-center">
+          <div className="flex flex-wrap items-center gap-2 lg:mx-auto lg:self-center">
             <StatInfoCard
               icon={<CheckCircleIcon className="h-4 w-4" />}
               label="Veículos com rota hoje"
@@ -413,7 +413,7 @@ export function MonitoramentoPage() {
           {/* Direita — toggles de camadas. Ambos ficam desabilitados enquanto
               houver placa/linha selecionada: o filtro lateral já força as
               camadas correspondentes via `showRotasEffective` / `showLocaisEffective`. */}
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-row flex-wrap items-center gap-2 lg:flex-col lg:items-end">
             <ToggleChip
               active={showRotas}
               onClick={handleToggleRotas}
@@ -449,7 +449,7 @@ export function MonitoramentoPage() {
             placaToLinhas={placaToLinhas}
             linhaToPlacas={linhaToPlacas}
           />
-          <div className="min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
+          <div className="min-h-[62vh] min-w-0 flex-1 lg:min-h-0">
             <MapaMonitoramento
               veiculos={veiculosVisiveis}
               rotas={rotasVisiveis}
@@ -468,7 +468,7 @@ export function MonitoramentoPage() {
         {showBottomSection && (
           <section className="flex flex-wrap gap-3">
             {showRotas && (
-              <div className="min-w-[360px] flex-1">
+              <div className="min-w-0 flex-1 sm:min-w-[360px]">
                 <RotasTable
                   rotas={rotasVisiveis}
                   loading={rotasPoll.loading}
@@ -479,7 +479,7 @@ export function MonitoramentoPage() {
               </div>
             )}
             {selectedVeiculos.map((v: Veiculo) => (
-              <div key={v.idVeiculo} className="min-w-[360px] flex-1">
+              <div key={v.idVeiculo} className="min-w-0 flex-1 sm:min-w-[360px]">
                 <ViagemEntradasTable idViagem={v.idViagem!} placa={v.placa!} />
               </div>
             ))}

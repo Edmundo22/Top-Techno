@@ -43,7 +43,7 @@ export function StatInfoCard({
   return (
     <div
       title={title}
-      className={`flex h-12 min-w-[200px] items-center gap-3 rounded-card border px-3 shadow-card ${VARIANT_CARD[variant]}`}
+      className={`flex h-12 min-w-[150px] flex-1 items-center gap-3 rounded-card border px-3 shadow-card sm:min-w-[200px] sm:flex-none ${VARIANT_CARD[variant]}`}
     >
       <div
         className={`grid h-8 w-8 shrink-0 place-items-center rounded-md ${VARIANT_ICON[variant]}`}

@@ -105,14 +105,14 @@ export function MotoristasTable({
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-card border border-brand-line bg-white shadow-card">
       <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse text-[10px] sm:text-xs">
           <thead className="sticky top-0 z-10 bg-brand-line-soft">
             <tr>
               {COLUMNS.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
-                  className="select-none border-b border-brand-line px-3 py-2 text-left font-semibold text-brand-ink"
+                  className="select-none border-b border-brand-line px-1.5 py-2 text-left font-semibold text-brand-ink sm:px-3"
                 >
                   <button
                     type="button"
@@ -174,7 +174,7 @@ export function MotoristasTable({
                 {COLUMNS.map((c) => (
                   <td
                     key={c.key}
-                    className="border-b border-brand-line px-3 py-1.5 text-left text-brand-ink"
+                    className="border-b border-brand-line px-1.5 py-1.5 align-top text-left text-brand-ink sm:px-3"
                   >
                     {displayValue(row, c.key)}
                   </td>
