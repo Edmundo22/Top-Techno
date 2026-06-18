@@ -32,6 +32,20 @@ const POLL_LOCAIS_MS = 30_000;
 const countLocaisUnicos = (locais: { idLocal: number }[]) =>
   new Set(locais.map((l) => l.idLocal)).size;
 
+// Paleta dos pills de placa/linha selecionados — azul (igual à rota) sempre 1ª,
+// para casar visualmente qual placa é de qual linha pelos cards. Só pinta os
+// botões; o mapa não muda.
+const PILL_PALETTE = [
+  '#1d4ed8', // azul
+  '#ea580c', // laranja
+  '#16a34a', // verde
+  '#9333ea', // roxo
+  '#0891b2', // ciano
+  '#ca8a04', // âmbar
+  '#db2777', // rosa
+  '#475569', // ardósia
+];
+
 export function MonitoramentoPage() {
   // Veículos com rota são SEMPRE visíveis no mapa. O card correspondente é só
   // informativo (mostra contagem). O usuário ainda pode escolher exibir os
@@ -158,6 +172,30 @@ export function MonitoramentoPage() {
     }
     return map;
   }, [rotas]);
+
+  // -------- cores dos pills (placa = âncora; sua linha herda a mesma cor).
+  // Itera as placas na ordem de seleção: a 1ª selecionada fica azul.
+  const { colorByPlaca, colorByLinha } = useMemo(() => {
+    const colorByPlaca = new Map<string, string>();
+    const colorByLinha = new Map<string, string>();
+    let i = 0;
+    for (const placa of selectedPlacas) {
+      if (colorByPlaca.has(placa)) continue;
+      const color = PILL_PALETTE[i % PILL_PALETTE.length];
+      i++;
+      colorByPlaca.set(placa, color);
+      placaToLinhas.get(placa)?.forEach((l) => {
+        if (selectedLinhas.includes(l) && !colorByLinha.has(l)) colorByLinha.set(l, color);
+      });
+    }
+    // Defensivo: linha selecionada sem placa selecionada (raro, dado o sync).
+    for (const linha of selectedLinhas) {
+      if (colorByLinha.has(linha)) continue;
+      colorByLinha.set(linha, PILL_PALETTE[i % PILL_PALETTE.length]);
+      i++;
+    }
+    return { colorByPlaca, colorByLinha };
+  }, [selectedPlacas, selectedLinhas, placaToLinhas]);
 
   // Conjunto unificado de placas após combinar seleção direta + seleção via linha
   const placasFiltradas = useMemo(() => {
@@ -406,6 +444,10 @@ export function MonitoramentoPage() {
             linhas={linhasDisponiveis}
             selectedLinhas={selectedLinhas}
             onToggleLinha={handleToggleLinha}
+            colorByPlaca={colorByPlaca}
+            colorByLinha={colorByLinha}
+            placaToLinhas={placaToLinhas}
+            linhaToPlacas={linhaToPlacas}
           />
           <div className="min-h-[55vh] min-w-0 flex-1 lg:min-h-0">
             <MapaMonitoramento
