@@ -38,8 +38,8 @@ Clicar no checkbox de titular **não** aplica direto: abre um modal de confirma�
 (`confirmTitular`). A mensagem varia — "deixar X como titular", "trocar o X pelo Y"
 (quando já há titular) ou "remover X como titular" (ao desmarcar). Desvincular
 também confirma em modal. `MapaRota` no modo pequeno esconde o zoom (+/-) e mostra
-só o botão de tela cheia (canto inf. dir.); em **tela cheia** (detectada via
-`fullscreenchange`) libera todos os controles padrão do Google Maps.
+o Street View + o botão de tela cheia (canto inf. dir.); em **tela cheia** (detectada
+via `fullscreenchange`) libera todos os controles padrão do Google Maps.
 
 `DisponiveisCard` é o único com estado local (Set de marcados); recebe
 `key={selectedIdFt}` para remontar e zerar a seleção ao trocar de rota.
