@@ -448,21 +448,24 @@ export function MonitoramentoPage() {
             colorByLinha={colorByLinha}
             placaToLinhas={placaToLinhas}
             linhaToPlacas={linhaToPlacas}
-          />
-          <div className="min-h-[62vh] min-w-0 flex-1 lg:min-h-0">
-            <MapaMonitoramento
-              veiculos={veiculosVisiveis}
-              rotas={rotasVisiveis}
-              locais={locaisVisiveis}
-              showRotas={showRotasEffective}
-              showLocais={showLocaisEffective}
-              selectedViagemId={selectedViagemId}
-              onSelectViagem={handleSelectViagem}
-              onVisibleLocaisChange={handleVisibleLocaisChange}
-              onMapReady={handleMapReady}
-              posicoesPlacas={placasComPosicoes}
-            />
-          </div>
+          >
+            {/* order-3 no mobile (mapa-herói abaixo das strips); order-2 no
+                desktop (meio, entre placas à esquerda e linhas à direita). */}
+            <div className="order-3 min-h-[62vh] min-w-0 flex-1 lg:order-2 lg:min-h-0">
+              <MapaMonitoramento
+                veiculos={veiculosVisiveis}
+                rotas={rotasVisiveis}
+                locais={locaisVisiveis}
+                showRotas={showRotasEffective}
+                showLocais={showLocaisEffective}
+                selectedViagemId={selectedViagemId}
+                onSelectViagem={handleSelectViagem}
+                onVisibleLocaisChange={handleVisibleLocaisChange}
+                onMapReady={handleMapReady}
+                posicoesPlacas={placasComPosicoes}
+              />
+            </div>
+          </FiltrosLateral>
         </section>
 
         {showBottomSection && (
