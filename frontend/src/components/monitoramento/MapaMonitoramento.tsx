@@ -12,8 +12,9 @@ import { VeiculoMarker } from './VeiculoMarker';
 
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
+// Cor padrão da rota quando a placa NÃO está selecionada (sem cor de pill).
 const ROUTE_COLOR = '#1d4ed8';
-const ROUTE_COLOR_SELECTED = '#dc2626';
+// Demais rotas quando uma viagem está selecionada — esmaecidas em cinza.
 const ROUTE_COLOR_DIMMED = '#d1d5db';
 const ENDPOINT_COLOR_DIMMED = '#9ca3af';
 
@@ -61,6 +62,10 @@ interface MapaMonitoramentoProps {
    *  da viagem. Cada item monta um `<PosicoesLayer>` que faz seu próprio
    *  polling e desenha as bolinhas numeradas no mapa. */
   posicoesPlacas?: Array<{ idViagem: number; placa: string }>;
+  /** Cor do pill de cada placa selecionada (paleta da página). Quando a placa
+   *  tem cor aqui, o ícone do veículo E a rota dele no mapa usam essa MESMA cor;
+   *  sem entrada, caem na cor padrão (verde/preto no veículo, azul na rota). */
+  colorByPlaca?: Map<string, string>;
 }
 
 export function MapaMonitoramento({
@@ -74,6 +79,7 @@ export function MapaMonitoramento({
   onVisibleLocaisChange,
   onMapReady,
   posicoesPlacas,
+  colorByPlaca,
 }: MapaMonitoramentoProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 
@@ -153,11 +159,12 @@ export function MapaMonitoramento({
       const isSelected = selectedViagemId === rota.idViagem;
       const isDimmed = hasSelection && !isSelected;
 
-      const polylineColor = isSelected
-        ? ROUTE_COLOR_SELECTED
-        : isDimmed
-        ? ROUTE_COLOR_DIMMED
-        : ROUTE_COLOR;
+      // Cor-base da rota = cor do pill da placa (quando selecionada nos cards);
+      // sem pill, cai no azul padrão. A rota SELECIONADA mantém a própria cor-base
+      // (sem virar vermelho) e se destaca por pulsar + ficar mais grossa; as
+      // demais esmaecem em cinza enquanto houver uma seleção.
+      const baseColor = (rota.placa && colorByPlaca?.get(rota.placa)) || ROUTE_COLOR;
+      const polylineColor = isDimmed ? ROUTE_COLOR_DIMMED : baseColor;
 
       const polyline = new google.maps.Polyline({
         path,
@@ -175,11 +182,7 @@ export function MapaMonitoramento({
 
       const endpointIcon: google.maps.Symbol = {
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: isSelected
-          ? ROUTE_COLOR_SELECTED
-          : isDimmed
-          ? ENDPOINT_COLOR_DIMMED
-          : ROUTE_COLOR,
+        fillColor: isDimmed ? ENDPOINT_COLOR_DIMMED : baseColor,
         fillOpacity: 1,
         strokeColor: '#ffffff',
         strokeWeight: 2,
@@ -237,7 +240,7 @@ export function MapaMonitoramento({
     return () => {
       clearRotas();
     };
-  }, [map, showRotas, rotas, selectedViagemId, onSelectViagem, clearRotas]);
+  }, [map, showRotas, rotas, selectedViagemId, onSelectViagem, clearRotas, colorByPlaca]);
 
   // Reporta a quantidade de markers de local dentro do viewport.
   // Recalcula no `idle` (Maps dispara só uma vez quando o pan/zoom termina —
@@ -327,7 +330,8 @@ export function MapaMonitoramento({
           <VeiculoMarker
             key={`veic-${v.idVeiculo}`}
             data={v}
-            color={pickVeiculoColor(v)}
+            // Placa selecionada nos cards → ícone na cor do pill; senão verde/preto.
+            color={(v.placa && colorByPlaca?.get(v.placa)) || pickVeiculoColor(v)}
           />
         ))}
 
