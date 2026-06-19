@@ -47,7 +47,8 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - Toggle de uma **linha** ativa/desativa todas as **placas** que rodam essa linha hoje — lookup em `linhaToPlacas`.
 - Multi-select em ambos. Quando há seleção, mapa restringe **veículos / rotas / locais** ao subconjunto e o toggle "Todas as rotas" é considerado implicitamente ligado para o subconjunto (`showRotasEffective = showRotas || hasSelection`).
 - Catálogo de placas é montado a partir de `veiculosComRota` (só quem tem rota); catálogo de linhas vem de `rotas.numeroLinha`.
-- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) **somente em tons de azul** — do verde-marinho (teal) ao azul escuro (navy) —, com a **1ª selecionada sempre `#439ff0`**. A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. **Só pinta os botões**; o mapa/markers **não** mudam. Não-selecionados seguem o estilo padrão.
+- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) de **cores variadas, mas SEM vermelho nem roxo** — esses dois são reservados no mapa (vermelho = local atrasado; roxo = local no prazo e ainda dentro). A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. Não-selecionados seguem o estilo padrão.
+- **A cor do pill vai para o mapa**: a página repassa `colorByPlaca` ao `MapaMonitoramento`. O **ícone do veículo** e a **rota dele** usam a **mesma cor** do pill da placa selecionada. Sem seleção (placa sem pill), caem na cor padrão: veículo verde (com rota) / preto (sem rota), rota azul `#1d4ed8`. Por isso a paleta evita vermelho/roxo — para o veículo/rota não colidirem com os estados do marker de local.
 - **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
 - **Centralizar o par**: ao clicar numa placa, o card de linhas rola para **centralizar** a linha correspondente (e vice-versa). `PlacasFilterCard`/`LinhasFilterCard` expõem `scrollToItem(value)` via `forwardRef`/`useImperativeHandle`; o `FiltrosLateral` chama o card oposto no clique, usando `placaToLinhas`/`linhaToPlacas` para achar o par. O scroll é contido no container (cálculo de `offsetTop`, sem mexer no scroll da página).
 - **Posição (desktop `lg`)**: os dois cards ladeiam o mapa — **placas à esquerda, mapa no meio,
@@ -81,14 +82,14 @@ As polylines (e seus I/F) são criadas com `new google.maps.Polyline/Marker/Info
 ## Visual
 
 - Ícone do veículo: SVG `directions_car`, `scale: 1.6`. Cor:
-  - Verde `#16a34a` quando `v.temRota` (com rota cadastrada hoje).
-  - Preto `#000000` caso contrário.
+  - **Placa selecionada nos cards**: a cor do pill (`colorByPlaca`).
+  - Senão, verde `#16a34a` quando `v.temRota` (com rota hoje); preto `#000000` caso contrário.
 - Label `PLACA` em `<OverlayView>` acima do ícone, mesma cor do ícone.
-- Polylines:
-  - Sem seleção: azul `#1d4ed8`, weight 4, opacity 0.85.
-  - Selecionada: vermelho `#dc2626`, weight 6, opacity pulsando entre 0.4 e 1.0.
-  - Outras quando há seleção: cinza claro `#d1d5db`, weight 4, zIndex baixo.
-- Markers I/F: círculos scale 7 com label branco I/F. Mesma cor da polyline (selecionada vermelha, dimmed cinza `#9ca3af`).
+- Polylines (cor-base `baseColor` = pill da placa quando selecionada, senão azul `#1d4ed8`):
+  - Sem seleção de viagem: `baseColor`, weight 4, opacity 0.85.
+  - Selecionada (`selectedViagemId`): mantém `baseColor` (**não** vira vermelho), weight 6, opacity pulsando entre 0.4 e 1.0 — destaque por pulso + espessura.
+  - Outras quando há viagem selecionada: cinza claro `#d1d5db`, weight 4, zIndex baixo.
+- Markers I/F: círculos scale 7 com label branco I/F. Mesma cor da polyline (`baseColor`, ou cinza `#9ca3af` quando dimmed).
 - Marker do local: pin teardrop colorido por estado (ver "Cor do local").
 - Círculo do raio: mesma cor do pin com `fillOpacity: 0.75` (alinhado com cadastros).
 
@@ -107,7 +108,7 @@ Em `LocalMarker.pickLocalColor(data)`:
 
 - `selectedViagemId: number | null` vive em `Monitoramento.tsx`.
 - Click em I/F no mapa ou linha da tabela chama `onSelectViagem(idViagem)`; click duplo no mesmo alvo desmarca.
-- Visual: linha na `RotasTable` ganha `bg-brand-accent-soft` + ring de borda; polyline correspondente pulsa.
+- Visual: linha na `RotasTable` ganha `bg-brand-accent-soft` + ring de borda; a polyline correspondente pulsa (mantendo sua cor-base) e as demais esmaecem em cinza.
 - Desligar "Todas as rotas de hoje" limpa a seleção (`null`).
 
 ## Tabela `ViagemEntradasTable`
