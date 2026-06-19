@@ -16,15 +16,15 @@ Monitoramento.tsx (page)
   │    ├─ Esquerda:  ClockCard + LastUpdateBadge
   │    ├─ Meio:      StatToggleCard × 2  (Veículos com rota / sem rota)
   │    └─ Direita:   ToggleChip × 2      (Todas as rotas de hoje / Todos os locais de hoje)
-  ├─ Área principal (flex row)
-  │    ├─ FiltrosLateral
-  │    │    ├─ PlacasFilterCard  ← lista vertical de pílulas com placas (multi-select)
-  │    │    └─ LinhasFilterCard  ← lista vertical de pílulas com NUMERO_LINHA (multi-select)
-  │    └─ MapaMonitoramento
-  │         ├─ VeiculoMarker     ← cor vem de `temRota`: verde quando true, preto quando false
-  │         ├─ [rotas]            ← Polyline + I/F (padrão imperativo)
-  │         ├─ LocalMarker        ← pin teardrop, cor por status de entrada/saída
-  │         └─ MapLegend + MapPoiToggle  ← canto inferior esquerdo (slot extra)
+  ├─ Área principal (flex row, 3 colunas no lg)
+  │    └─ FiltrosLateral (envolve o mapa; placas | mapa | linhas)
+  │         ├─ PlacasFilterCard  ← ESQUERDA: lista vertical de pílulas com placas (multi-select)
+  │         ├─ MapaMonitoramento ← MEIO (recebido como children do FiltrosLateral)
+  │         │    ├─ VeiculoMarker     ← cor vem de `temRota`: verde quando true, preto quando false
+  │         │    ├─ [rotas]            ← Polyline + I/F (padrão imperativo)
+  │         │    ├─ LocalMarker        ← pin teardrop, cor por status de entrada/saída
+  │         │    └─ MapLegend + MapPoiToggle  ← canto inferior esquerdo (slot extra)
+  │         └─ LinhasFilterCard  ← DIREITA: lista vertical de pílulas com NUMERO_LINHA (multi-select)
   └─ Área inferior (flex-wrap)
        ├─ RotasTable              ← Todas as rotas de hoje (coluna Linha + status + placa + datas)
        └─ ViagemEntradasTable × N ← uma por placa selecionada
@@ -50,11 +50,16 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`, **azul = 1ª**, igual à rota). A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. **Só pinta os botões**; o mapa/markers **não** mudam. Não-selecionados seguem o estilo padrão.
 - **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
 - **Centralizar o par**: ao clicar numa placa, o card de linhas rola para **centralizar** a linha correspondente (e vice-versa). `PlacasFilterCard`/`LinhasFilterCard` expõem `scrollToItem(value)` via `forwardRef`/`useImperativeHandle`; o `FiltrosLateral` chama o card oposto no clique, usando `placaToLinhas`/`linhaToPlacas` para achar o par. O scroll é contido no container (cálculo de `offsetTop`, sem mexer no scroll da página).
-- Largura da coluna de filtros: `lg:w-56`.
-- **Mobile**: os cards de filtro viram **strips horizontais roláveis** (`flex` + `overflow-x-auto`,
-  pills `shrink-0 whitespace-nowrap`) e voltam a lista vertical em `lg` (`lg:flex-col`). O
-  `FiltrosLateral` fica com altura automática no mobile (sem `40vh`) para o mapa ser o herói; o
-  `scrollToItem` centraliza no eixo que estiver rolando (vertical no `lg`, horizontal no mobile).
+- **Posição (desktop `lg`)**: os dois cards ladeiam o mapa — **placas à esquerda, mapa no meio,
+  linhas/rotas à direita**. O `FiltrosLateral` envolve o mapa (recebido como `children`) e renderiza
+  os três como irmãos no `flex-row` da seção; com `align-items: stretch` (default), cada `aside`
+  estica para a altura da linha → **a mesma altura do mapa**. Cada card tem `lg:h-full` para preencher.
+  Largura de cada coluna de filtro: `lg:w-56`.
+- **Mobile**: a seção é `flex-col` e os cards viram **strips horizontais roláveis** (`flex` +
+  `overflow-x-auto`, pills `shrink-0 whitespace-nowrap`), voltando a lista vertical em `lg`
+  (`lg:flex-col`). As duas strips ficam no topo (placas `order-1`, linhas `order-2`) e o mapa-herói
+  logo abaixo (`order-3`, vira `lg:order-2` no desktop) — então a divisão esquerda/direita só vale
+  no `lg`. O `scrollToItem` centraliza no eixo que estiver rolando (vertical no `lg`, horizontal no mobile).
 
 ## Polyline pulsante
 
