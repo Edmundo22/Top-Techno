@@ -35,18 +35,21 @@ const countLocaisUnicos = (locais: { idLocal: number }[]) =>
 // Paleta dos pills de placa/linha selecionados — cores variadas, mas SEM
 // vermelho, roxo nem azul escuro: vermelho/roxo são reservados no mapa
 // (vermelho = local atrasado; roxo = local no prazo e ainda dentro) e o azul
-// escuro `#1d4ed8` foi descartado a pedido. A 1ª seleção é SEMPRE `#4397f0`. A
-// placa é a âncora; a linha herda a mesma cor. Essas MESMAS cores pintam o
-// ícone do veículo e a rota dele no mapa — ver `colorByPlaca` no MapaMonitoramento.
+// escuro `#1d4ed8` foi descartado a pedido. A 1ª seleção é SEMPRE `#4397f0`.
+// Ordenada para MAXIMIZAR a distinção entre seleções consecutivas (matizes bem
+// separados primeiro); o magenta `#db2777` entra para abrir o leque de matiz —
+// é o único arco livre, distinto do vermelho e do roxo. A placa é a âncora; a
+// linha herda a mesma cor. Essas MESMAS cores pintam o ícone do veículo e a
+// rota dele no mapa — ver `colorByPlaca` no MapaMonitoramento.
 const PILL_PALETTE = [
   '#4397f0', // azul (1ª — fixo)
   '#ea580c', // laranja
   '#16a34a', // verde
+  '#db2777', // magenta/rosa
   '#0891b2', // ciano
   '#ca8a04', // âmbar
   '#475569', // ardósia
-  '#0d9488', // teal
-  '#4d7c0f', // oliva
+  '#65a30d', // verde-limão
 ];
 
 export function MonitoramentoPage() {
