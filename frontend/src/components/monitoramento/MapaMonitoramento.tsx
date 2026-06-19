@@ -17,7 +17,6 @@ const DEFAULT_ZOOM = 12;
 const ROUTE_COLOR = '#4397f0';
 // Demais rotas quando uma viagem está selecionada — esmaecidas em cinza.
 const ROUTE_COLOR_DIMMED = '#d1d5db';
-const ENDPOINT_COLOR_DIMMED = '#9ca3af';
 
 const COLOR_VEIC_COM_ROTA = '#16a34a';
 const COLOR_VEIC_SEM_ROTA = '#000000';
@@ -183,7 +182,8 @@ export function MapaMonitoramento({
 
       const endpointIcon: google.maps.Symbol = {
         path: google.maps.SymbolPath.CIRCLE,
-        fillColor: isDimmed ? ENDPOINT_COLOR_DIMMED : baseColor,
+        // I/F sempre na MESMA cor da rota (inclusive esmaecidos junto com ela).
+        fillColor: polylineColor,
         fillOpacity: 1,
         strokeColor: '#ffffff',
         strokeWeight: 2,

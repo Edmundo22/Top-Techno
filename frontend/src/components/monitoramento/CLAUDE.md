@@ -47,7 +47,7 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - Toggle de uma **linha** ativa/desativa todas as **placas** que rodam essa linha hoje — lookup em `linhaToPlacas`.
 - Multi-select em ambos. Quando há seleção, mapa restringe **veículos / rotas / locais** ao subconjunto e o toggle "Todas as rotas" é considerado implicitamente ligado para o subconjunto (`showRotasEffective = showRotas || hasSelection`).
 - Catálogo de placas é montado a partir de `veiculosComRota` (só quem tem rota); catálogo de linhas vem de `rotas.numeroLinha`.
-- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) de **cores variadas, mas SEM vermelho, roxo nem azul escuro** — vermelho/roxo são reservados no mapa (vermelho = local atrasado; roxo = local no prazo e ainda dentro) e o azul escuro `#1d4ed8` foi descartado. A **1ª seleção é sempre `#4397f0`**. A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. Não-selecionados seguem o estilo padrão.
+- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) de **cores variadas, mas SEM vermelho, roxo nem azul escuro** — vermelho/roxo são reservados no mapa (vermelho = local atrasado; roxo = local no prazo e ainda dentro) e o azul escuro `#1d4ed8` foi descartado. A **1ª seleção é sempre `#4397f0`**. A paleta é **ordenada para maximizar a distinção entre seleções consecutivas** (matizes bem separados primeiro) e inclui um **magenta `#db2777`** para abrir o leque de matiz — é o único arco livre, distinto do vermelho/roxo do mapa. A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. Não-selecionados seguem o estilo padrão.
 - **A cor do pill vai para o mapa**: a página repassa `colorByPlaca` ao `MapaMonitoramento`. O **ícone do veículo** e a **rota dele** usam a **mesma cor** do pill da placa selecionada. Sem seleção (placa sem pill), caem na cor padrão: veículo verde (com rota) / preto (sem rota), rota azul `#4397f0`. Por isso a paleta evita vermelho/roxo — para o veículo/rota não colidirem com os estados do marker de local.
 - **Card da tabela de horários (`ViagemEntradasTable`)**: cada card recebe `accentColor` = a mesma cor do veículo/rota no mapa (de `colorByPlaca`, atualiza com a seleção), exibida como **barra fina no topo** + **dot ao lado da placa** (com halo suave). Amarra visualmente o card ao par veículo/rota.
 - **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
@@ -90,7 +90,7 @@ As polylines (e seus I/F) são criadas com `new google.maps.Polyline/Marker/Info
   - Sem seleção de viagem: `baseColor`, weight 4, opacity 0.85.
   - Selecionada (`selectedViagemId`): mantém `baseColor` (**não** vira vermelho), weight 6, opacity pulsando entre 0.4 e 1.0 — destaque por pulso + espessura.
   - Outras quando há viagem selecionada: cinza claro `#d1d5db`, weight 4, zIndex baixo.
-- Markers I/F: círculos scale 7 com label branco I/F. Mesma cor da polyline (`baseColor`, ou cinza `#9ca3af` quando dimmed).
+- Markers I/F: círculos scale 7 com label branco I/F. **Sempre na mesma cor da polyline** (`polylineColor` — `baseColor`, ou cinza `#d1d5db` quando dimmed, esmaecendo junto com a rota).
 - Marker do local: pin teardrop colorido por estado (ver "Cor do local").
 - Círculo do raio: mesma cor do pin com `fillOpacity: 0.75` (alinhado com cadastros).
 
