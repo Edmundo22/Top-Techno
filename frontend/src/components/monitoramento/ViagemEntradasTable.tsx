@@ -8,6 +8,10 @@ import {
 interface ViagemEntradasTableProps {
   idViagem: number;
   placa: string;
+  /** Cor de destaque do card = mesma cor do pill/veículo/rota no mapa. Muda
+   *  conforme a seleção (paleta `colorByPlaca` da página). Quando presente,
+   *  pinta a barra superior e o dot ao lado da placa. */
+  accentColor?: string;
 }
 
 const POLL_INTERVAL_MS = 15_000;
@@ -24,7 +28,7 @@ function formatTDentro(min: number | null): string {
   return `${min} min`;
 }
 
-export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProps) {
+export function ViagemEntradasTable({ idViagem, placa, accentColor }: ViagemEntradasTableProps) {
   const poll = useLivePoll<ViagemEntradasResponse>(
     monitoramentoEndpoints.viagemEntradas(idViagem),
     { intervalMs: POLL_INTERVAL_MS },
@@ -34,11 +38,29 @@ export function ViagemEntradasTable({ idViagem, placa }: ViagemEntradasTableProp
 
   return (
     <Card className="flex max-h-[360px] flex-col overflow-hidden p-0">
+      {accentColor && (
+        // Barra superior fina na cor do veículo selecionado (acento "tab").
+        <div
+          className="h-1 w-full flex-shrink-0"
+          style={{ backgroundColor: accentColor }}
+          aria-hidden
+        />
+      )}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-brand-line px-5 py-3">
-        <h2 className="text-sm font-semibold text-brand-ink">
-          Entradas — <span className="font-bold">{placa}</span>
+        <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-brand-ink">
+          {accentColor && (
+            // Dot na cor do veículo, com halo suave — amarra a cor à placa.
+            <span
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: accentColor, boxShadow: `0 0 0 3px ${accentColor}22` }}
+              aria-hidden
+            />
+          )}
+          <span className="truncate">
+            Entradas — <span className="font-bold">{placa}</span>
+          </span>
         </h2>
-        <span className="text-xs text-brand-ink-muted">
+        <span className="shrink-0 text-xs text-brand-ink-muted">
           {poll.loading ? 'atualizando…' : `${entradas.length} parada(s)`}
         </span>
       </div>

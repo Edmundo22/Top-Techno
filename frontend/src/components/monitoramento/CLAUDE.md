@@ -47,8 +47,9 @@ Dois cards verticais (`PlacasFilterCard` / `LinhasFilterCard`) compartilham um e
 - Toggle de uma **linha** ativa/desativa todas as **placas** que rodam essa linha hoje — lookup em `linhaToPlacas`.
 - Multi-select em ambos. Quando há seleção, mapa restringe **veículos / rotas / locais** ao subconjunto e o toggle "Todas as rotas" é considerado implicitamente ligado para o subconjunto (`showRotasEffective = showRotas || hasSelection`).
 - Catálogo de placas é montado a partir de `veiculosComRota` (só quem tem rota); catálogo de linhas vem de `rotas.numeroLinha`.
-- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) de **cores variadas, mas SEM vermelho nem roxo** — esses dois são reservados no mapa (vermelho = local atrasado; roxo = local no prazo e ainda dentro). A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. Não-selecionados seguem o estilo padrão.
-- **A cor do pill vai para o mapa**: a página repassa `colorByPlaca` ao `MapaMonitoramento`. O **ícone do veículo** e a **rota dele** usam a **mesma cor** do pill da placa selecionada. Sem seleção (placa sem pill), caem na cor padrão: veículo verde (com rota) / preto (sem rota), rota azul `#1d4ed8`. Por isso a paleta evita vermelho/roxo — para o veículo/rota não colidirem com os estados do marker de local.
+- **Cor dos pills selecionados**: a página calcula `colorByPlaca`/`colorByLinha` de uma paleta (`PILL_PALETTE`) de **cores variadas, mas SEM vermelho, roxo nem azul escuro** — vermelho/roxo são reservados no mapa (vermelho = local atrasado; roxo = local no prazo e ainda dentro) e o azul escuro `#1d4ed8` foi descartado. A **1ª seleção é sempre `#4397f0`**. A placa é a âncora — a linha correspondente herda a mesma cor — para casar visualmente "qual veículo é de qual rota" pelos cards. Não-selecionados seguem o estilo padrão.
+- **A cor do pill vai para o mapa**: a página repassa `colorByPlaca` ao `MapaMonitoramento`. O **ícone do veículo** e a **rota dele** usam a **mesma cor** do pill da placa selecionada. Sem seleção (placa sem pill), caem na cor padrão: veículo verde (com rota) / preto (sem rota), rota azul `#4397f0`. Por isso a paleta evita vermelho/roxo — para o veículo/rota não colidirem com os estados do marker de local.
+- **Card da tabela de horários (`ViagemEntradasTable`)**: cada card recebe `accentColor` = a mesma cor do veículo/rota no mapa (de `colorByPlaca`, atualiza com a seleção), exibida como **barra fina no topo** + **dot ao lado da placa** (com halo suave). Amarra visualmente o card ao par veículo/rota.
 - **Contador**: cada card mostra no header um badge `N sel.` (placas/linhas ativas) além do total do catálogo.
 - **Centralizar o par**: ao clicar numa placa, o card de linhas rola para **centralizar** a linha correspondente (e vice-versa). `PlacasFilterCard`/`LinhasFilterCard` expõem `scrollToItem(value)` via `forwardRef`/`useImperativeHandle`; o `FiltrosLateral` chama o card oposto no clique, usando `placaToLinhas`/`linhaToPlacas` para achar o par. O scroll é contido no container (cálculo de `offsetTop`, sem mexer no scroll da página).
 - **Posição (desktop `lg`)**: os dois cards ladeiam o mapa — **placas à esquerda, mapa no meio,
@@ -85,7 +86,7 @@ As polylines (e seus I/F) são criadas com `new google.maps.Polyline/Marker/Info
   - **Placa selecionada nos cards**: a cor do pill (`colorByPlaca`).
   - Senão, verde `#16a34a` quando `v.temRota` (com rota hoje); preto `#000000` caso contrário.
 - Label `PLACA` em `<OverlayView>` acima do ícone, mesma cor do ícone.
-- Polylines (cor-base `baseColor` = pill da placa quando selecionada, senão azul `#1d4ed8`):
+- Polylines (cor-base `baseColor` = pill da placa quando selecionada, senão azul `#4397f0` = `ROUTE_COLOR`):
   - Sem seleção de viagem: `baseColor`, weight 4, opacity 0.85.
   - Selecionada (`selectedViagemId`): mantém `baseColor` (**não** vira vermelho), weight 6, opacity pulsando entre 0.4 e 1.0 — destaque por pulso + espessura.
   - Outras quando há viagem selecionada: cinza claro `#d1d5db`, weight 4, zIndex baixo.
