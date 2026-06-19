@@ -10,8 +10,9 @@ interface LegendItem {
 }
 
 const VEICULOS: LegendItem[] = [
-  { kind: 'veiculo', color: '#16a34a', label: 'Veículo com rota hoje' },
-  { kind: 'veiculo', color: '#000000', label: 'Veículo sem rota' },
+  { kind: 'veiculo', color: '#4397f0', label: 'Selecionado — cor do filtro (veículo + rota)' },
+  { kind: 'veiculo', color: '#16a34a', label: 'Com rota hoje (não selecionado)' },
+  { kind: 'veiculo', color: '#000000', label: 'Sem rota hoje' },
 ];
 
 const LOCAIS: LegendItem[] = [

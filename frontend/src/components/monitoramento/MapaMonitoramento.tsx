@@ -13,7 +13,8 @@ import { VeiculoMarker } from './VeiculoMarker';
 const SAO_PAULO_CENTER = { lat: -23.55052, lng: -46.633308 };
 const DEFAULT_ZOOM = 12;
 // Cor padrão da rota quando a placa NÃO está selecionada (sem cor de pill).
-const ROUTE_COLOR = '#1d4ed8';
+// Azul `#4397f0` (mesmo da 1ª seleção); o azul escuro `#1d4ed8` foi descartado.
+const ROUTE_COLOR = '#4397f0';
 // Demais rotas quando uma viagem está selecionada — esmaecidas em cinza.
 const ROUTE_COLOR_DIMMED = '#d1d5db';
 const ENDPOINT_COLOR_DIMMED = '#9ca3af';

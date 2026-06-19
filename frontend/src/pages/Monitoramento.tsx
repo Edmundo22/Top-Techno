@@ -33,12 +33,13 @@ const countLocaisUnicos = (locais: { idLocal: number }[]) =>
   new Set(locais.map((l) => l.idLocal)).size;
 
 // Paleta dos pills de placa/linha selecionados — cores variadas, mas SEM
-// vermelho nem roxo: esses dois são reservados no mapa (vermelho = local
-// atrasado; roxo = local no prazo e ainda dentro). A placa é a âncora; a linha
-// herda a mesma cor. Essas MESMAS cores agora pintam o ícone do veículo e a
-// rota dele no mapa — ver `colorByPlaca` repassado ao MapaMonitoramento.
+// vermelho, roxo nem azul escuro: vermelho/roxo são reservados no mapa
+// (vermelho = local atrasado; roxo = local no prazo e ainda dentro) e o azul
+// escuro `#1d4ed8` foi descartado a pedido. A 1ª seleção é SEMPRE `#4397f0`. A
+// placa é a âncora; a linha herda a mesma cor. Essas MESMAS cores pintam o
+// ícone do veículo e a rota dele no mapa — ver `colorByPlaca` no MapaMonitoramento.
 const PILL_PALETTE = [
-  '#1d4ed8', // azul
+  '#4397f0', // azul (1ª — fixo)
   '#ea580c', // laranja
   '#16a34a', // verde
   '#0891b2', // ciano
@@ -176,7 +177,7 @@ export function MonitoramentoPage() {
   }, [rotas]);
 
   // -------- cores dos pills (placa = âncora; sua linha herda a mesma cor).
-  // Itera as placas na ordem de seleção: a 1ª selecionada fica azul. Essas
+  // Itera as placas na ordem de seleção: a 1ª selecionada fica `#4397f0`. Essas
   // cores também vão para o mapa (ícone do veículo + rota) via colorByPlaca.
   const { colorByPlaca, colorByLinha } = useMemo(() => {
     const colorByPlaca = new Map<string, string>();
@@ -487,7 +488,12 @@ export function MonitoramentoPage() {
             )}
             {selectedVeiculos.map((v: Veiculo) => (
               <div key={v.idVeiculo} className="min-w-0 flex-1 sm:min-w-[360px]">
-                <ViagemEntradasTable idViagem={v.idViagem!} placa={v.placa!} />
+                <ViagemEntradasTable
+                  idViagem={v.idViagem!}
+                  placa={v.placa!}
+                  // Mesma cor do pill/veículo/rota no mapa (atualiza com a seleção).
+                  accentColor={colorByPlaca.get(v.placa!) ?? '#16a34a'}
+                />
               </div>
             ))}
           </section>
