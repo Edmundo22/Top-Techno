@@ -32,18 +32,19 @@ const POLL_LOCAIS_MS = 30_000;
 const countLocaisUnicos = (locais: { idLocal: number }[]) =>
   new Set(locais.map((l) => l.idLocal)).size;
 
-// Paleta dos pills de placa/linha selecionados — azul (igual à rota) sempre 1ª,
-// para casar visualmente qual placa é de qual linha pelos cards. Só pinta os
-// botões; o mapa não muda.
+// Paleta dos pills de placa/linha selecionados — SOMENTE tons de azul, do
+// verde-marinho (teal) ao azul escuro (navy). A 1ª selecionada é sempre
+// `#439ff0`. Casa visualmente qual placa é de qual linha pelos cards. Só pinta
+// os botões; o mapa não muda.
 const PILL_PALETTE = [
-  '#1d4ed8', // azul
-  '#ea580c', // laranja
-  '#16a34a', // verde
-  '#9333ea', // roxo
+  '#439ff0', // 1ª — azul céu (fixo)
+  '#0d9488', // teal (verde-marinho)
+  '#1e3a8a', // azul escuro (navy)
   '#0891b2', // ciano
-  '#ca8a04', // âmbar
-  '#db2777', // rosa
-  '#475569', // ardósia
+  '#2563eb', // azul royal
+  '#0f766e', // teal escuro
+  '#1d4ed8', // azul
+  '#155e75', // ciano escuro
 ];
 
 export function MonitoramentoPage() {
@@ -174,7 +175,7 @@ export function MonitoramentoPage() {
   }, [rotas]);
 
   // -------- cores dos pills (placa = âncora; sua linha herda a mesma cor).
-  // Itera as placas na ordem de seleção: a 1ª selecionada fica azul.
+  // Itera as placas na ordem de seleção: a 1ª selecionada fica `#439ff0`.
   const { colorByPlaca, colorByLinha } = useMemo(() => {
     const colorByPlaca = new Map<string, string>();
     const colorByLinha = new Map<string, string>();
