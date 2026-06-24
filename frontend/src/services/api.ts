@@ -5,10 +5,7 @@ const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333';
 export const api = axios.create({
   baseURL,
   withCredentials: true,
-  // 60s: as consultas das tabelas de monitoramento (ex.: horários de entrada/
-  // saída por viagem) podem demorar mais que os 15s antigos e estavam dando
-  // timeout. Como o polling agora roda a cada 1 min, há folga de sobra.
-  timeout: 60000,
+  timeout: 15000,
 });
 
 export interface ApiErrorBody {

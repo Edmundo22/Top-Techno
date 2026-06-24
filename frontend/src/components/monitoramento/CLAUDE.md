@@ -75,9 +75,9 @@ As polylines (e seus I/F) são criadas com `new google.maps.Polyline/Marker/Info
 
 - `useLivePoll(url, { intervalMs, enabled })` é o hook genérico.
 - **Veículos**: `15s`, sempre ligado. Posição "ao vivo" precisa de refresh rápido.
-- **Rotas**: `1 min`, sempre ligado. Alimenta a `RotasTable` e o catálogo do filtro lateral; muda no máximo 1×/dia, então 1 min é folgado e deixa a tabela na mesma cadência das demais.
+- **Rotas**: `2 min`, sempre ligado. O dataset muda no máximo 1×/dia (cadastros de FTs), então não vale martelar — mas o filtro lateral de linhas precisa dos dados antes do usuário tocar em qualquer toggle, daí "sempre ligado".
 - **Locais**: `30s`, ativo **só quando há marker dentro do viewport do mapa**. A página recebe `onVisibleLocaisChange(count)` do mapa (disparado em cada `idle`), e o `enabled` do poll fica `layerAtiva && (!hasInitialLocais || visibleLocaisCount > 0)`. O `hasInitialLocais` libera o primeiro fetch (chicken-and-egg: sem dados não há como calcular bounds). Quando o usuário arrasta pra fora de todos os locais, o polling pausa; ao voltar para uma área com markers, retoma e refaz fetch imediato.
-- Cada `ViagemEntradasTable` monta seu próprio `useLivePoll` (`1 min`) em `/monitoramento/viagem-entradas?idViagem=X`. Era 15s, mas a consulta é pesada e dava timeout; 1 min reduz a carga. O timeout do axios (`api.ts`) subiu para `60s` para acomodar consultas lentas sem erro.
+- Cada `ViagemEntradasTable` monta seu próprio `useLivePoll` (15s) em `/monitoramento/viagem-entradas?idViagem=X`.
 - Markers/InfoWindows são chaveados por ID estável (`idVeiculo`, `idLocal`, `idViagem`) → reconciliação suave do React, sem flicker.
 
 ## Visual
