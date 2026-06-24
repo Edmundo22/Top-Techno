@@ -22,9 +22,10 @@ import { logSuccess } from '../utils/logger';
 
 // Veículos: posição "ao vivo" — 15s.
 const POLL_VEICULOS_MS = 15_000;
-// Rotas/linhas: atualizadas no máximo 1x/dia — 2 min é suficiente para o filtro
-// lateral refletir cadastros novos sem martelar o banco.
-const POLL_ROTAS_MS = 2 * 60_000;
+// Rotas/linhas: 1 min. Alimenta a RotasTable e o catálogo do filtro lateral.
+// Mudam no máximo 1x/dia, então 1 min é folgado e mantém a tabela na mesma
+// cadência de atualização das demais.
+const POLL_ROTAS_MS = 60_000;
 // Locais: cores e horários de entrada/saída precisam de refresh frequente, mas
 // só vale a pena puxar enquanto houver pelo menos um marker visível no viewport.
 const POLL_LOCAIS_MS = 30_000;
