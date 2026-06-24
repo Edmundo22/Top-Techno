@@ -14,9 +14,7 @@ interface ViagemEntradasTableProps {
   accentColor?: string;
 }
 
-// 1 min: a consulta de horários por viagem é pesada e a 15s estava dando
-// timeout. 1 min reduz a carga e mantém os dados atualizados sem erro.
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 15_000;
 const ON_TIME_BG = 'bg-sky-100';
 const LATE_BG = 'bg-red-100';
 
