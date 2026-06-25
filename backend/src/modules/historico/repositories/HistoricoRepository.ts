@@ -56,7 +56,8 @@ export class HistoricoRepository {
            l.PONTO_PARADA AS LOCAL_PONTO_PARADA
          FROM [TOP_TECHNO].[dbo].[TB_VIAGEM_POSICAO] vp
          LEFT JOIN [TOP_TECHNO].[dbo].[TB_LOCAL] l ON l.ID_LOCAL = vp.ID_LOCAL
-         WHERE CAST(vp.DT_POSICAO AS DATE) = CAST(@data AS DATE)
+         WHERE vp.DT_POSICAO >= CAST(@data AS DATE)
+           AND vp.DT_POSICAO <  DATEADD(DAY, 1, CAST(@data AS DATE))
            AND vp.LATITUDE IS NOT NULL AND vp.LONGITUDE IS NOT NULL
          ORDER BY vp.DT_POSICAO ASC`,
       );
@@ -82,7 +83,8 @@ export class HistoricoRepository {
          INNER JOIN [TOP_TECHNO].[dbo].[FT_CABECALHO] ft ON ft.ID_FT = vi.ID_FT
          LEFT JOIN [TOP_TECHNO].[dbo].[TB_VIAGEM_STATUS] vs ON vs.ID_VIAGEM_STATUS = vi.ID_VIAGEM_STATUS
          LEFT JOIN [TOP_TECHNO].[dbo].[TB_VEICULO] vei ON vei.ID_VEICULO = vi.ID_VEICULO
-         WHERE CAST(vi.DT_VIAGEM AS DATE) = CAST(@data AS DATE)
+         WHERE vi.DT_VIAGEM >= CAST(@data AS DATE)
+           AND vi.DT_VIAGEM <  DATEADD(DAY, 1, CAST(@data AS DATE))
            AND ft.POLYLINE IS NOT NULL`,
       );
     return result.recordset;
@@ -110,7 +112,8 @@ export class HistoricoRepository {
          FROM [TOP_TECHNO].[dbo].[TB_LOCAL_HISTORICO] lh
          INNER JOIN [TOP_TECHNO].[dbo].[TB_LOCAL] l ON l.ID_LOCAL = lh.ID_LOCAL
          LEFT JOIN [TOP_TECHNO].[dbo].[TB_VEICULO] v ON v.ID_VEICULO = lh.ID_VEICULO
-         WHERE CAST(lh.DT_ENTRADA AS DATE) = CAST(@data AS DATE)
+         WHERE lh.DT_ENTRADA >= CAST(@data AS DATE)
+           AND lh.DT_ENTRADA <  DATEADD(DAY, 1, CAST(@data AS DATE))
            AND l.LATITUDE IS NOT NULL AND l.LONGITUDE IS NOT NULL
          ORDER BY lh.DT_ENTRADA ASC`,
       );

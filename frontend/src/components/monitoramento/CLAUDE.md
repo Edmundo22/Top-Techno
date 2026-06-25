@@ -134,4 +134,4 @@ Reusa de [components/ui/icons.tsx](../ui/icons.tsx) — `RouteIcon`, `CheckCircl
 
 ## Regra de "hoje"
 
-Corte é feito no backend via `CAST(... AS DATE) = CAST(GETDATE() AS DATE)`. Ver [backend/src/modules/monitoramento/CLAUDE.md](../../../../backend/src/modules/monitoramento/CLAUDE.md).
+Corte é feito no backend via range sargável sobre `DT_VIAGEM` (`>= CAST(GETDATE() AS DATE)` e `< DATEADD(DAY, 1, ...)`). Ver [backend/src/modules/monitoramento/CLAUDE.md](../../../../backend/src/modules/monitoramento/CLAUDE.md).
