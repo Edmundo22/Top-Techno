@@ -79,7 +79,8 @@ export class MonitoramentoRepository {
     // separar veículos "com rota" (verde) de "sem rota" (preto).
     //
     // Não filtra por DT_ULT_POSICAO: todo veículo com lat/lng aparece no mapa,
-    // tenha reportado hoje ou não. A viagem do dia usa CAST(GETDATE() AS DATE).
+    // tenha reportado hoje ou não. A viagem do dia é cortada por range sargável
+    // sobre DT_VIAGEM (>= hoje e < amanhã), permitindo index seek em vez de scan.
     const result = await pool
       .request()
       .query<VeiculoRow>(
@@ -95,7 +96,8 @@ export class MonitoramentoRepository {
          FROM [TOP_TECHNO].[dbo].[TB_VIAGEM] v2
          LEFT JOIN [TOP_TECHNO].[dbo].[FT_CABECALHO] ft ON ft.ID_FT = v2.ID_FT
          WHERE v2.ID_VEICULO = v.ID_VEICULO
-           AND CAST(v2.DT_VIAGEM AS DATE) = CAST(GETDATE() AS DATE)
+           AND v2.DT_VIAGEM >= CAST(GETDATE() AS DATE)
+           AND v2.DT_VIAGEM <  DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
        ) via
        WHERE v.LATITUDE IS NOT NULL AND v.LONGITUDE IS NOT NULL`,
       );
@@ -124,7 +126,8 @@ export class MonitoramentoRepository {
        INNER JOIN [TOP_TECHNO].[dbo].[FT_CABECALHO] ft ON ft.ID_FT = vi.ID_FT
        LEFT JOIN [TOP_TECHNO].[dbo].[TB_VIAGEM_STATUS] vs ON vs.ID_VIAGEM_STATUS = vi.ID_VIAGEM_STATUS
        LEFT JOIN [TOP_TECHNO].[dbo].[TB_VEICULO] vei ON vei.ID_VEICULO = vi.ID_VEICULO
-       WHERE CAST(vi.DT_VIAGEM AS DATE) = @today
+       WHERE vi.DT_VIAGEM >= CAST(@today AS DATE)
+         AND vi.DT_VIAGEM <  DATEADD(DAY, 1, CAST(@today AS DATE))
          AND ft.POLYLINE IS NOT NULL`,
       );
     return result.recordset;
@@ -143,7 +146,8 @@ export class MonitoramentoRepository {
        FROM [TOP_TECHNO].[dbo].[TB_VIAGEM_ENTRADA] ve
        INNER JOIN [TOP_TECHNO].[dbo].[TB_VIAGEM] vi ON vi.ID_VIAGEM = ve.ID_VIAGEM
        INNER JOIN [TOP_TECHNO].[dbo].[TB_LOCAL]  l  ON l.ID_LOCAL  = ve.ID_LOCAL
-       WHERE CAST(vi.DT_VIAGEM AS DATE) = @today
+       WHERE vi.DT_VIAGEM >= CAST(@today AS DATE)
+         AND vi.DT_VIAGEM <  DATEADD(DAY, 1, CAST(@today AS DATE))
          AND l.LATITUDE IS NOT NULL AND l.LONGITUDE IS NOT NULL
        ORDER BY ve.ID_VIAGEM ASC, ve.ORDEM ASC`,
       );

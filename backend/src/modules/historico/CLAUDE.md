@@ -14,7 +14,7 @@ Todas retornam `{ data: { ... } }` via `ok(res, ...)`. Validação de query via 
 
 ## Regra de "dia escolhido"
 
-O corte é feito no SQL com `CAST(coluna AS DATE) = CAST(@data AS DATE)`. O `@data` chega como `YYYY-MM-DD` (validado por regex no schema). Assim como em `monitoramento`, o fuso efetivo é o do SQL Server — mesmo ponto de edição caso aparente desvio de fuso.
+O corte é feito no SQL com um **range sargável**: `coluna >= CAST(@data AS DATE) AND coluna < DATEADD(DAY, 1, CAST(@data AS DATE))`. O `CAST` fica no parâmetro (não na coluna), então o otimizador consegue index seek/range em vez de varrer a tabela inteira — evita scans longos que seguram lock compartilhado. O `@data` chega como `YYYY-MM-DD` (validado por regex no schema). Assim como em `monitoramento`, o fuso efetivo é o do SQL Server — mesmo ponto de edição caso aparente desvio de fuso.
 
 ## Layers
 

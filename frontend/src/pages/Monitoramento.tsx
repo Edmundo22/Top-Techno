@@ -20,8 +20,10 @@ import {
 } from '../services/monitoramentoApi';
 import { logSuccess } from '../utils/logger';
 
-// Veículos: posição "ao vivo" — 15s.
-const POLL_VEICULOS_MS = 15_000;
+// Veículos: posição "ao vivo" — 1 min. A query (OUTER APPLY por veículo) é a mais
+// pesada do dashboard; 60s reduz a pressão de scan/lock no banco sem prejudicar o
+// acompanhamento operacional.
+const POLL_VEICULOS_MS = 60_000;
 // Rotas/linhas: atualizadas no máximo 1x/dia — 2 min é suficiente para o filtro
 // lateral refletir cadastros novos sem martelar o banco.
 const POLL_ROTAS_MS = 2 * 60_000;
